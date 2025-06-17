@@ -91,7 +91,8 @@ describe('TaskForm コンポーネント', () => {
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
         title: 'テストタスク',
-        description: 'テストの説明'
+        description: 'テストの説明',
+        priority: 'medium'
       });
     });
   });

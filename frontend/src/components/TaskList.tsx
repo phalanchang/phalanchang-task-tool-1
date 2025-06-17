@@ -12,15 +12,16 @@ export interface Task {
   title: string;
   description: string;
   status: 'pending' | 'completed';
+  priority: 'low' | 'medium' | 'high';
   created_at: string;
   updated_at: string;
 }
 
 interface TaskListProps {
   tasks: Task[];
-  onEdit: (task: Task) => void;
-  onDelete: (id: number) => void;
-  onToggleStatus: (id: number) => void;
+  onEdit: (task: Task, updateData: any) => void;
+  onDelete: (task: Task) => void;
+  onToggleStatus: (task: Task) => void;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, onEdit, onDelete, onToggleStatus }) => {
@@ -35,8 +36,10 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onEdit, onDelete, onToggleSt
               <h3>{task.title}</h3>
               <p>{task.description}</p>
               <p>{task.status === 'pending' ? '未完了' : '完了済み'}</p>
-              <button onClick={() => onEdit(task)}>編集</button>
-              <button onClick={() => onDelete(task.id)}>削除</button>
+              <button onClick={() => onToggleStatus(task)}>
+                {task.status === 'pending' ? '完了にする' : '未完了にする'}
+              </button>
+              <button onClick={() => onDelete(task)}>削除</button>
             </div>
           ))}
         </div>

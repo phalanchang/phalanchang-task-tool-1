@@ -10,7 +10,12 @@
     "test:watch": "jest --watch",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "db:migrate": "node database/migrate.js up",
+    "db:seed": "node database/migrate.js seed",
+    "db:reset": "node database/migrate.js reset",
+    "db:status": "node database/migrate.js status",
+    "db:setup": "node database/migrate.js setup"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +25,8 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "mysql2": "^3.14.1"
   },
   "devDependencies": {
     "eslint": "^9.29.0",

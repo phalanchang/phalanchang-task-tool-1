@@ -2,28 +2,10 @@
  * タスク管理コントローラー
  * 
  * このファイルには、タスクに関するすべてのAPI処理が含まれています。
- * 現在はメモリ上の配列でデータを管理していますが、後でMySQLに置き換える予定です。
+ * Taskモデルを使用してMySQLデータベースとやり取りします。
  */
 
-// 仮のタスクデータ（後でMySQLに置き換える）
-let tasks = [
-  {
-    id: 1,
-    title: 'サンプルタスク1',
-    description: 'これはサンプルタスクです',
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: 2,
-    title: 'サンプルタスク2',
-    description: '完了済みのサンプルタスクです',
-    status: 'completed',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+const Task = require('../models/Task');
 
 /**
  * すべてのタスクを取得する
@@ -34,9 +16,11 @@ let tasks = [
  * @param {Object} req - リクエストオブジェクト
  * @param {Object} res - レスポンスオブジェクト
  */
-const getAllTasks = (req, res) => {
+const getAllTasks = async (req, res) => {
   try {
-    // すべてのタスクを取得して返す
+    // Taskモデルを使用してすべてのタスクを取得
+    const tasks = await Task.findAll();
+    
     res.status(200).json({
       success: true,        // 処理が成功したことを示す
       data: tasks,          // タスクの配列
@@ -47,7 +31,8 @@ const getAllTasks = (req, res) => {
     console.error('タスク一覧取得エラー:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch tasks'
+      error: 'Failed to fetch tasks',
+      message: error.message
     });
   }
 };
@@ -61,13 +46,13 @@ const getAllTasks = (req, res) => {
  * @param {Object} req - リクエストオブジェクト（req.params.idにタスクIDが入る）
  * @param {Object} res - レスポンスオブジェクト
  */
-const getTaskById = (req, res) => {
+const getTaskById = async (req, res) => {
   try {
-    // URLパラメータからIDを取得し、数値に変換
-    const id = parseInt(req.params.id);
+    // URLパラメータからIDを取得
+    const id = req.params.id;
     
-    // 配列からIDが一致するタスクを検索
-    const task = tasks.find(t => t.id === id);
+    // Taskモデルを使用してIDでタスクを検索
+    const task = await Task.findById(id);
     
     // タスクが見つからない場合
     if (!task) {
@@ -87,7 +72,8 @@ const getTaskById = (req, res) => {
     console.error('タスク取得エラー:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch task'
+      error: 'Failed to fetch task',
+      message: error.message
     });
   }
 };
@@ -101,32 +87,18 @@ const getTaskById = (req, res) => {
  * @param {Object} req - リクエストオブジェクト（req.bodyにタスク情報が入る）
  * @param {Object} res - レスポンスオブジェクト
  */
-const createTask = (req, res) => {
+const createTask = async (req, res) => {
   try {
-    // リクエストボディからタイトルと説明を取得
-    const { title, description } = req.body;
+    // リクエストボディからタスク情報を取得
+    const { title, description, status, priority } = req.body;
     
-    // タイトルが入力されているかチェック（必須項目）
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        error: 'Title is required'
-      });
-    }
-    
-    // 新しいタスクオブジェクトを作成
-    const newTask = {
-      // 新しいIDを生成（既存の最大ID + 1）
-      id: Math.max(...tasks.map(t => t.id), 0) + 1,
-      title,                                    // タイトル
-      description: description || '',           // 説明（空の場合は空文字）
-      status: 'pending',                       // 初期状態は「未完了」
-      created_at: new Date().toISOString(),    // 作成日時
-      updated_at: new Date().toISOString()     // 更新日時
-    };
-    
-    // 配列に新しいタスクを追加
-    tasks.push(newTask);
+    // Taskモデルを使用して新しいタスクを作成
+    const newTask = await Task.create({
+      title,
+      description,
+      status,
+      priority
+    });
     
     // 作成されたタスクを返す（ステータス201 = Created）
     res.status(201).json({
@@ -134,11 +106,21 @@ const createTask = (req, res) => {
       data: newTask
     });
   } catch (error) {
-    // エラーが発生した場合の処理
+    // バリデーションエラーの場合は400を返す
+    if (error.message.includes('必須') || error.message.includes('文字以内') || error.message.includes('である必要があります')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: error.message
+      });
+    }
+    
+    // その他のエラーは500を返す
     console.error('タスク作成エラー:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create task'
+      error: 'Failed to create task',
+      message: error.message
     });
   }
 };
@@ -152,36 +134,29 @@ const createTask = (req, res) => {
  * @param {Object} req - リクエストオブジェクト（req.params.idとreq.bodyが使用される）
  * @param {Object} res - レスポンスオブジェクト
  */
-const updateTask = (req, res) => {
+const updateTask = async (req, res) => {
   try {
     // URLパラメータからIDを取得
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     
     // リクエストボディから更新する値を取得
-    const { title, description, status } = req.body;
+    const { title, description, status, priority } = req.body;
     
-    // 配列から更新対象のタスクのインデックスを検索
-    const taskIndex = tasks.findIndex(t => t.id === id);
+    // Taskモデルを使用してタスクを更新
+    const updatedTask = await Task.update(id, {
+      title,
+      description,
+      status,
+      priority
+    });
     
     // タスクが見つからない場合
-    if (taskIndex === -1) {
+    if (!updatedTask) {
       return res.status(404).json({
         success: false,
         error: 'Task not found'
       });
     }
-    
-    // 既存のタスクに新しい値をマージして更新
-    const updatedTask = {
-      ...tasks[taskIndex],                     // 既存の値を展開
-      ...(title && { title }),                 // タイトルが指定されていれば更新
-      ...(description !== undefined && { description }), // 説明が指定されていれば更新
-      ...(status && { status }),               // ステータスが指定されていれば更新
-      updated_at: new Date().toISOString()     // 更新日時を現在時刻に設定
-    };
-    
-    // 配列内のタスクを更新
-    tasks[taskIndex] = updatedTask;
     
     // 更新されたタスクを返す
     res.status(200).json({
@@ -189,11 +164,21 @@ const updateTask = (req, res) => {
       data: updatedTask
     });
   } catch (error) {
-    // エラーが発生した場合の処理
+    // バリデーションエラーの場合は400を返す
+    if (error.message.includes('必須') || error.message.includes('文字以内') || error.message.includes('である必要があります') || error.message.includes('有効なID')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: error.message
+      });
+    }
+    
+    // その他のエラーは500を返す
     console.error('タスク更新エラー:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update task'
+      error: 'Failed to update task',
+      message: error.message
     });
   }
 };
@@ -207,24 +192,21 @@ const updateTask = (req, res) => {
  * @param {Object} req - リクエストオブジェクト（req.params.idにタスクIDが入る）
  * @param {Object} res - レスポンスオブジェクト
  */
-const deleteTask = (req, res) => {
+const deleteTask = async (req, res) => {
   try {
     // URLパラメータからIDを取得
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     
-    // 配列から削除対象のタスクのインデックスを検索
-    const taskIndex = tasks.findIndex(t => t.id === id);
+    // Taskモデルを使用してタスクを削除
+    const deletedTask = await Task.delete(id);
     
     // タスクが見つからない場合
-    if (taskIndex === -1) {
+    if (!deletedTask) {
       return res.status(404).json({
         success: false,
         error: 'Task not found'
       });
     }
-    
-    // 配列からタスクを削除し、削除されたタスクを取得
-    const deletedTask = tasks.splice(taskIndex, 1)[0];
     
     // 削除されたタスクの情報を返す
     res.status(200).json({
@@ -233,11 +215,21 @@ const deleteTask = (req, res) => {
       message: 'Task deleted successfully'
     });
   } catch (error) {
-    // エラーが発生した場合の処理
+    // バリデーションエラーの場合は400を返す
+    if (error.message.includes('有効なID')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: error.message
+      });
+    }
+    
+    // その他のエラーは500を返す
     console.error('タスク削除エラー:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to delete task'
+      error: 'Failed to delete task',
+      message: error.message
     });
   }
 };

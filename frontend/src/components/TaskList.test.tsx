@@ -54,12 +54,12 @@ describe('TaskList コンポーネント', () => {
     expect(screen.getByText('完了済みのタスクです')).toBeInTheDocument();
   });
 
-  test('各タスクに「編集」「削除」ボタンが表示されること', () => {
+  test('各タスクに「ステータス切り替え」「削除」ボタンが表示されること', () => {
     render(<TaskList tasks={mockTasks} onEdit={jest.fn()} onDelete={jest.fn()} onToggleStatus={jest.fn()} />);
     
-    // 編集ボタンがタスクの数だけ存在すること
-    const editButtons = screen.getAllByText('編集');
-    expect(editButtons).toHaveLength(mockTasks.length);
+    // ステータス切り替えボタンがタスクの数だけ存在すること
+    const toggleButtons = screen.getAllByText(/完了にする|未完了にする/);
+    expect(toggleButtons).toHaveLength(mockTasks.length);
     
     // 削除ボタンがタスクの数だけ存在すること
     const deleteButtons = screen.getAllByText('削除');
@@ -86,14 +86,14 @@ describe('TaskList コンポーネント', () => {
       onToggleStatus={mockOnToggleStatus} 
     />);
     
-    // 最初のタスクの編集ボタンをクリック
-    const editButtons = screen.getAllByText('編集');
-    editButtons[0].click();
-    expect(mockOnEdit).toHaveBeenCalledWith(mockTasks[0]);
+    // 最初のタスクのステータス切り替えボタンをクリック
+    const toggleButton = screen.getByText('完了にする');
+    toggleButton.click();
+    expect(mockOnToggleStatus).toHaveBeenCalledWith(mockTasks[0]);
     
     // 最初のタスクの削除ボタンをクリック
     const deleteButtons = screen.getAllByText('削除');
     deleteButtons[0].click();
-    expect(mockOnDelete).toHaveBeenCalledWith(mockTasks[0].id);
+    expect(mockOnDelete).toHaveBeenCalledWith(mockTasks[0]);
   });
 });

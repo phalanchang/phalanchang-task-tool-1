@@ -27,6 +27,7 @@ describe('App コンポーネント統合テスト', () => {
         title: 'APIから取得したタスク',
         description: 'API連携テスト',
         status: 'pending' as const,
+        priority: 'medium' as const,
         created_at: '2025-06-17T10:00:00.000Z',
         updated_at: '2025-06-17T10:00:00.000Z'
       }
@@ -54,6 +55,7 @@ describe('App コンポーネント統合テスト', () => {
       title: '新規作成タスク',
       description: '統合テスト用',
       status: 'pending' as const,
+      priority: 'medium' as const,
       created_at: '2025-06-17T10:00:00.000Z',
       updated_at: '2025-06-17T10:00:00.000Z'
     };

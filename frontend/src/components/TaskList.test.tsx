@@ -16,6 +16,7 @@ const mockTasks = [
     title: 'テストタスク1',
     description: 'これはテスト用のタスクです',
     status: 'pending' as const,
+    priority: 'high' as const,
     created_at: '2025-06-17T10:00:00.000Z',
     updated_at: '2025-06-17T10:00:00.000Z'
   },
@@ -24,6 +25,7 @@ const mockTasks = [
     title: 'テストタスク2',
     description: '完了済みのタスクです',
     status: 'completed' as const,
+    priority: 'low' as const,
     created_at: '2025-06-17T09:00:00.000Z',
     updated_at: '2025-06-17T11:00:00.000Z'
   }

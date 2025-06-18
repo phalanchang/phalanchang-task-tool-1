@@ -35,18 +35,20 @@ async function runMigrations() {
       const filePath = path.join(migrationsDir, file);
       const sql = await fs.readFile(filePath, 'utf8');
       
-      // SQLを実行
-      const [results] = await connection.execute(sql);
-      console.log(`✓ ${file} 実行完了`);
+      // SQLを個別の文に分割して実行
+      const statements = sql
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
       
-      // 結果があればメッセージを表示
-      if (Array.isArray(results) && results.length > 0) {
-        results.forEach(result => {
-          if (result.message) {
-            console.log(`  ${result.message}`);
-          }
-        });
+      for (const statement of statements) {
+        if (statement.toUpperCase().startsWith('USE')) {
+          await connection.query(statement);
+        } else {
+          await connection.execute(statement);
+        }
       }
+      console.log(`✓ ${file} 実行完了`);
     }
     
     console.log('\n=== マイグレーション完了 ===');
@@ -73,6 +75,9 @@ async function runSeeds() {
     // データベース接続
     connection = await createConnection();
     
+    // データベースを明示的に選択
+    await connection.query('USE task_management_app');
+    
     // シードディレクトリのファイル一覧取得
     const seedsDir = path.join(__dirname, 'seeds');
     const files = await fs.readdir(seedsDir);
@@ -87,24 +92,20 @@ async function runSeeds() {
       const filePath = path.join(seedsDir, file);
       const sql = await fs.readFile(filePath, 'utf8');
       
-      // SQLを実行
-      const [results] = await connection.execute(sql);
-      console.log(`✓ ${file} 実行完了`);
+      // SQLを個別の文に分割して実行
+      const statements = sql
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
       
-      // 結果があればメッセージを表示
-      if (Array.isArray(results) && results.length > 0) {
-        results.forEach(result => {
-          if (result.message) {
-            console.log(`  ${result.message}`);
-          }
-          if (result.total_tasks !== undefined) {
-            console.log(`  総タスク数: ${result.total_tasks}`);
-          }
-          if (result.count !== undefined) {
-            console.log(`  ${result.status}: ${result.count}件`);
-          }
-        });
+      for (const statement of statements) {
+        if (statement.toUpperCase().startsWith('USE')) {
+          await connection.query(statement);
+        } else {
+          await connection.execute(statement);
+        }
       }
+      console.log(`✓ ${file} 実行完了`);
     }
     
     console.log('\n=== シードデータ投入完了 ===');
@@ -177,7 +178,7 @@ async function checkStatus() {
     console.log('✓ task_management_app データベースが存在します');
     
     // テーブル確認
-    await connection.execute('USE task_management_app');
+    await connection.query('USE task_management_app');
     const [tables] = await connection.execute('SHOW TABLES');
     
     if (tables.length === 0) {

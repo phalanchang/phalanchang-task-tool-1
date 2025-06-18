@@ -97,7 +97,7 @@ class Task {
     let connection;
     try {
       connection = await createConnection();
-      await connection.execute('USE task_management_app');
+      await connection.query('USE task_management_app');
 
       // データベースに挿入
       const [result] = await connection.execute(
@@ -137,7 +137,7 @@ class Task {
     let connection;
     try {
       connection = await createConnection();
-      await connection.execute('USE task_management_app');
+      await connection.query('USE task_management_app');
 
       const [rows] = await connection.execute(
         'SELECT * FROM tasks ORDER BY created_at DESC'
@@ -167,7 +167,7 @@ class Task {
     let connection;
     try {
       connection = await createConnection();
-      await connection.execute('USE task_management_app');
+      await connection.query('USE task_management_app');
 
       const [rows] = await connection.execute(
         'SELECT * FROM tasks WHERE id = ?',
@@ -209,7 +209,7 @@ class Task {
     let connection;
     try {
       connection = await createConnection();
-      await connection.execute('USE task_management_app');
+      await connection.query('USE task_management_app');
 
       // 更新対象の存在確認
       const [existingRows] = await connection.execute(
@@ -290,7 +290,7 @@ class Task {
     let connection;
     try {
       connection = await createConnection();
-      await connection.execute('USE task_management_app');
+      await connection.query('USE task_management_app');
 
       // 削除対象の存在確認
       const [existingRows] = await connection.execute(

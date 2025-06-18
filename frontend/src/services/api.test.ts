@@ -25,6 +25,7 @@ describe('Task API Service', () => {
           title: 'テストタスク1',
           description: 'テスト用',
           status: 'pending',
+          priority: 'medium',
           created_at: '2025-06-17T10:00:00.000Z',
           updated_at: '2025-06-17T10:00:00.000Z'
         }
@@ -67,6 +68,7 @@ describe('Task API Service', () => {
         id: 1,
         ...newTaskData,
         status: 'pending',
+        priority: 'medium',
         created_at: '2025-06-17T10:00:00.000Z',
         updated_at: '2025-06-17T10:00:00.000Z'
       };
@@ -99,6 +101,7 @@ describe('Task API Service', () => {
         title: '更新されたタスク',
         description: '更新された説明',
         status: 'completed',
+        priority: 'high',
         created_at: '2025-06-17T10:00:00.000Z',
         updated_at: '2025-06-17T11:00:00.000Z'
       };
@@ -132,6 +135,7 @@ describe('Task API Service', () => {
         title: '削除されたタスク',
         description: '削除されたタスクの説明',
         status: 'pending',
+        priority: 'low',
         created_at: '2025-06-17T10:00:00.000Z',
         updated_at: '2025-06-17T10:00:00.000Z'
       };

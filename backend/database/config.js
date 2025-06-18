@@ -21,10 +21,11 @@ const dbConfig = {
   acquireTimeout: 60000,
   timeout: 60000,
   
-  // SSL設定（本番環境用）
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false
-  } : false
+  // 開発環境でのMySQL接続設定
+  insecureAuth: true,
+  
+  // SSL設定を無効化（ローカル開発環境）
+  ssl: false
 };
 
 /**
@@ -46,6 +47,8 @@ const createConnection = async () => {
       password: dbConfig.password,
       charset: dbConfig.charset,
       timezone: dbConfig.timezone,
+      insecureAuth: dbConfig.insecureAuth,
+      ssl: dbConfig.ssl,
       multipleStatements: true // マイグレーション実行用
     });
     

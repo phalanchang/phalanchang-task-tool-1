@@ -98,6 +98,7 @@ describe('App コンポーネント統合テスト', () => {
       title: 'ステータス更新テスト',
       description: 'テスト用',
       status: 'pending' as const,
+      priority: 'medium' as const,
       created_at: '2025-06-17T10:00:00.000Z',
       updated_at: '2025-06-17T10:00:00.000Z'
     };
@@ -128,6 +129,7 @@ describe('App コンポーネント統合テスト', () => {
       title: '削除対象タスク',
       description: '削除テスト用',
       status: 'pending' as const,
+      priority: 'medium' as const,
       created_at: '2025-06-17T10:00:00.000Z',
       updated_at: '2025-06-17T10:00:00.000Z'
     };

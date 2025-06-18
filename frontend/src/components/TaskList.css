@@ -1,0 +1,58 @@
+/**
+ * TaskList スタイル - カードベースデザイン
+ * 
+ * グリッドレイアウトとレスポンシブ対応
+ */
+
+.task-list {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* グリッドレイアウト */
+.task-list__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* 空の状態 */
+.task-list__empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-secondary, #666666);
+  font-size: 1.1rem;
+}
+
+.task-list__empty p {
+  margin: 0;
+  font-style: italic;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .task-list {
+    padding: 8px;
+  }
+  
+  .task-list__grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .task-list__empty {
+    padding: 32px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-list {
+    padding: 4px;
+  }
+  
+  .task-list__grid {
+    gap: 8px;
+  }
+}

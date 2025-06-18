@@ -80,6 +80,7 @@ GET /api/tasks
       "title": "買い物に行く",
       "description": "牛乳とパンを買う",
       "status": "pending",
+      "priority": "medium",
       "created_at": "2025-06-17T10:00:00.000Z",
       "updated_at": "2025-06-17T10:00:00.000Z"
     },
@@ -88,6 +89,7 @@ GET /api/tasks
       "title": "レポート作成",
       "description": "月次売上レポートを作成する",
       "status": "completed",
+      "priority": "high",
       "created_at": "2025-06-17T09:00:00.000Z",
       "updated_at": "2025-06-17T11:00:00.000Z"
     }
@@ -116,6 +118,7 @@ GET /api/tasks/:id
     "title": "買い物に行く",
     "description": "牛乳とパンを買う",
     "status": "pending",
+    "priority": "medium",
     "created_at": "2025-06-17T10:00:00.000Z",
     "updated_at": "2025-06-17T10:00:00.000Z"
   }
@@ -142,7 +145,8 @@ POST /api/tasks
 ```json
 {
   "title": "新しいタスク",
-  "description": "タスクの説明（任意）"
+  "description": "タスクの説明（任意）",
+  "priority": "medium"
 }
 ```
 
@@ -151,6 +155,7 @@ POST /api/tasks
 
 **任意フィールド:**
 - `description`: タスクの説明（文字列、省略可能）
+- `priority`: タスクの優先度（"low", "medium", "high" のいずれか、省略時は "medium"）
 
 **レスポンス例:**
 ```json
@@ -161,6 +166,7 @@ POST /api/tasks
     "title": "新しいタスク",
     "description": "タスクの説明",
     "status": "pending",
+    "priority": "medium",
     "created_at": "2025-06-17T12:00:00.000Z",
     "updated_at": "2025-06-17T12:00:00.000Z"
   }
@@ -191,7 +197,8 @@ PUT /api/tasks/:id
 {
   "title": "更新されたタスク",
   "description": "更新された説明",
-  "status": "completed"
+  "status": "completed",
+  "priority": "high"
 }
 ```
 
@@ -199,6 +206,7 @@ PUT /api/tasks/:id
 - `title`: タスクのタイトル（文字列）
 - `description`: タスクの説明（文字列）
 - `status`: タスクの状態（"pending" または "completed"）
+- `priority`: タスクの優先度（"low", "medium", "high" のいずれか）
 
 **レスポンス例:**
 ```json
@@ -209,6 +217,7 @@ PUT /api/tasks/:id
     "title": "更新されたタスク",
     "description": "更新された説明",
     "status": "completed",
+    "priority": "high",
     "created_at": "2025-06-17T10:00:00.000Z",
     "updated_at": "2025-06-17T13:00:00.000Z"
   }
@@ -243,6 +252,7 @@ DELETE /api/tasks/:id
     "title": "削除されたタスク",
     "description": "削除されたタスクの説明",
     "status": "pending",
+    "priority": "low",
     "created_at": "2025-06-17T10:00:00.000Z",
     "updated_at": "2025-06-17T10:00:00.000Z"
   },
@@ -268,6 +278,7 @@ DELETE /api/tasks/:id
 | title | string | ○ | タスクのタイトル |
 | description | string | × | タスクの詳細説明 |
 | status | string | ○ | タスクの状態（"pending" または "completed"） |
+| priority | string | ○ | タスクの優先度（"low", "medium", "high" のいずれか、デフォルト: "medium"） |
 | created_at | string | ○ | 作成日時（ISO 8601形式） |
 | updated_at | string | ○ | 最終更新日時（ISO 8601形式） |
 
@@ -275,6 +286,12 @@ DELETE /api/tasks/:id
 
 - `"pending"`: 未完了（デフォルト値）
 - `"completed"`: 完了
+
+### 優先度値
+
+- `"low"`: 低優先度
+- `"medium"`: 中優先度（デフォルト値）
+- `"high"`: 高優先度
 
 ## HTTPステータスコード
 
@@ -305,7 +322,7 @@ DELETE /api/tasks/:id
 ```bash
 curl -X POST http://localhost:3001/api/tasks \
   -H "Content-Type: application/json" \
-  -d '{"title": "資料作成", "description": "会議用の資料を作成する"}'
+  -d '{"title": "資料作成", "description": "会議用の資料を作成する", "priority": "high"}'
 ```
 
 2. **作成されたタスクを確認**
@@ -317,7 +334,7 @@ curl http://localhost:3001/api/tasks/3
 ```bash
 curl -X PUT http://localhost:3001/api/tasks/3 \
   -H "Content-Type: application/json" \
-  -d '{"status": "completed"}'
+  -d '{"status": "completed", "priority": "low"}'
 ```
 
 4. **タスクを削除**

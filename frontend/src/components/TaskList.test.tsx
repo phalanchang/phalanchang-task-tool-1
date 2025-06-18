@@ -54,6 +54,10 @@ describe('TaskList コンポーネント', () => {
     // タスクの説明が表示されること
     expect(screen.getByText('これはテスト用のタスクです')).toBeInTheDocument();
     expect(screen.getByText('完了済みのタスクです')).toBeInTheDocument();
+    
+    // TaskCardコンポーネントがタスクの数だけ存在すること
+    const taskCards = screen.getAllByTestId('task-card');
+    expect(taskCards).toHaveLength(mockTasks.length);
   });
 
   test('各タスクに「ステータス切り替え」「削除」ボタンが表示されること', () => {
@@ -71,9 +75,9 @@ describe('TaskList コンポーネント', () => {
   test('完了/未完了の状態が正しく表示されること', () => {
     render(<TaskList tasks={mockTasks} onEdit={jest.fn()} onDelete={jest.fn()} onToggleStatus={jest.fn()} />);
     
-    // ステータス表示を確認
+    // ステータス表示を確認（TaskCardコンポーネント内のバッジテキスト）
     expect(screen.getByText('未完了')).toBeInTheDocument();
-    expect(screen.getByText('完了済み')).toBeInTheDocument();
+    expect(screen.getByText('完了')).toBeInTheDocument();
   });
 
   test('ボタンクリック時にコールバック関数が呼ばれること', () => {

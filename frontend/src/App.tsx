@@ -54,6 +54,7 @@ function App() {
     try {
       setError(null);
       const newStatus = task.status === 'pending' ? 'completed' : 'pending';
+      const updateData = { status: newStatus };
       await taskAPI.updateTask(task.id, { status: newStatus });
       // 更新後に一覧を再取得
       await loadTasks();
@@ -101,20 +102,14 @@ function App() {
       <main>
         {/* エラーメッセージ表示 */}
         {error && (
-          <div style={{ 
-            background: '#ffebee', 
-            color: '#c62828', 
-            padding: '10px', 
-            margin: '10px 0', 
-            borderRadius: '4px' 
-          }}>
+          <div className="error-message">
             {error}
           </div>
         )}
         
         {/* ローディング表示 */}
         {loading && (
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
+          <div className="loading-message">
             読み込み中...
           </div>
         )}

@@ -1,10 +1,12 @@
 /**
  * TaskList コンポーネント
  * 
- * TDD Green段階: テストを通すための最小実装
+ * カードベースデザイン実装版
  */
 
 import React from 'react';
+import TaskCard from './TaskCard';
+import './TaskList.css';
 
 // タスクの型定義
 export interface Task {
@@ -26,21 +28,21 @@ interface TaskListProps {
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, onEdit, onDelete, onToggleStatus }) => {
   return (
-    <div data-testid="task-list">
+    <div className="task-list" data-testid="task-list">
       {tasks.length === 0 ? (
-        <p>タスクがありません</p>
+        <div className="task-list__empty">
+          <p>タスクがありません</p>
+        </div>
       ) : (
-        <div>
+        <div className="task-list__grid">
           {tasks.map((task) => (
-            <div key={task.id}>
-              <h3>{task.title}</h3>
-              <p>{task.description}</p>
-              <p>{task.status === 'pending' ? '未完了' : '完了済み'}</p>
-              <button onClick={() => onToggleStatus(task)}>
-                {task.status === 'pending' ? '完了にする' : '未完了にする'}
-              </button>
-              <button onClick={() => onDelete(task)}>削除</button>
-            </div>
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onToggleStatus={onToggleStatus}
+            />
           ))}
         </div>
       )}

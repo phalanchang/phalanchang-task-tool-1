@@ -135,12 +135,22 @@ const createTask = async (req, res) => {
  * @param {Object} res - レスポンスオブジェクト
  */
 const updateTask = async (req, res) => {
+  // URLパラメータからIDを取得（try外で定義）
+  const id = req.params.id;
+  
   try {
-    // URLパラメータからIDを取得
-    const id = req.params.id;
-    
     // リクエストボディから更新する値を取得
     const { title, description, status, priority } = req.body;
+    
+    // デバッグログ追加
+    console.log('PUT /api/tasks/' + id + ' - Received data:', {
+      id,
+      body: req.body,
+      title,
+      description,
+      status,
+      priority
+    });
     
     // Taskモデルを使用してタスクを更新
     const updatedTask = await Task.update(id, {
@@ -164,6 +174,14 @@ const updateTask = async (req, res) => {
       data: updatedTask
     });
   } catch (error) {
+    // エラー詳細をログ出力
+    console.error('updateTask エラー詳細:', {
+      message: error.message,
+      stack: error.stack,
+      requestId: id,
+      requestBody: req.body
+    });
+    
     // バリデーションエラーの場合は400を返す
     if (error.message.includes('必須') || error.message.includes('文字以内') || error.message.includes('である必要があります') || error.message.includes('有効なID')) {
       return res.status(400).json({

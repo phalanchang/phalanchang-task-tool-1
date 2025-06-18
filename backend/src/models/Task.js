@@ -197,10 +197,32 @@ class Task {
     this.validateId(id);
 
     // 更新データのバリデーション（部分的）
-    if (updateData.title !== undefined || updateData.status !== undefined || updateData.priority !== undefined) {
-      // 一時的なデータを作成してバリデーション
-      const tempData = { title: 'temp', ...updateData };
-      this.validateTaskData(tempData);
+    // 存在するフィールドのみをバリデーション
+    if (updateData.title !== undefined) {
+      // タイトルの必須チェック
+      if (!updateData.title || updateData.title.trim() === '') {
+        throw new Error('タイトルは必須です');
+      }
+      // タイトル長さチェック
+      if (updateData.title.length > 255) {
+        throw new Error('タイトルは255文字以内で入力してください');
+      }
+    }
+    
+    // ステータスのバリデーション
+    if (updateData.status !== undefined) {
+      const validStatuses = ['pending', 'completed'];
+      if (!validStatuses.includes(updateData.status)) {
+        throw new Error('ステータスは pending または completed である必要があります');
+      }
+    }
+
+    // 優先度のバリデーション
+    if (updateData.priority !== undefined) {
+      const validPriorities = ['low', 'medium', 'high'];
+      if (!validPriorities.includes(updateData.priority)) {
+        throw new Error('優先度は low, medium, high のいずれかである必要があります');
+      }
     }
 
     // データサニタイゼーション

@@ -9,7 +9,7 @@ async function testConnection() {
     console.log('MySQL接続テスト開始...');
     
     const connection = await mysql.createConnection({
-      host: 'localhost',
+      host: '10.255.255.254',
       port: 3306,
       user: 'root',
       password: '',

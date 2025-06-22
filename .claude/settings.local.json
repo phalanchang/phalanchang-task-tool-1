@@ -15,7 +15,11 @@
       "Bash(npm run build:*)",
       "Bash(grep:*)",
       "Bash(rm:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(export DB_HOST=10.255.255.254)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

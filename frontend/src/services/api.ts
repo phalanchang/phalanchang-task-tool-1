@@ -106,5 +106,45 @@ export const taskAPI = {
   async getTaskById(id: number): Promise<Task> {
     const response = await fetch(`${API_BASE_URL}/api/tasks/${id}`);
     return handleResponse<Task>(response);
+  },
+
+  /**
+   * デイリータスク（今日分の繰り返しタスクインスタンス）を取得
+   */
+  async getDailyTasks(): Promise<Task[]> {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/daily`);
+    return handleResponse<Task[]>(response);
+  },
+
+  /**
+   * 今日分のタスクインスタンスを生成
+   */
+  async generateTodayTasks(): Promise<{ generated: number; existing: number; tasks: Task[] }> {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/generate-today`, {
+      method: 'POST',
+    });
+    return handleResponse<{ generated: number; existing: number; tasks: Task[] }>(response);
+  },
+
+  /**
+   * 繰り返しタスク（マスタータスク）一覧を取得
+   */
+  async getRecurringTasks(): Promise<Task[]> {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/recurring`);
+    return handleResponse<Task[]>(response);
+  },
+
+  /**
+   * 新しい繰り返しタスク（マスタータスク）を作成
+   */
+  async createRecurringTask(taskData: CreateTaskData & { recurring_config: any }): Promise<Task> {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/recurring`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData),
+    });
+    return handleResponse<Task>(response);
   }
 };

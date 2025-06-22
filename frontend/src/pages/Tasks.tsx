@@ -3,15 +3,21 @@ import TaskList, { Task } from '../components/TaskList';
 import TaskForm from '../components/TaskForm';
 import { taskAPI, CreateTaskData, UpdateTaskData } from '../services/api';
 
+// タブの種類
+type TabType = 'all' | 'daily';
+
 const Tasks: React.FC = () => {
-  // ステート管理（App.tsxから移動）
+  // ステート管理
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [dailyTasks, setDailyTasks] = useState<Task[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<TabType>('all');
 
   // 初期表示時にタスク一覧を取得
   useEffect(() => {
     loadTasks();
+    loadDailyTasks();
   }, []);
 
   /**
@@ -32,6 +38,23 @@ const Tasks: React.FC = () => {
   };
 
   /**
+   * デイリータスク一覧をAPIから取得（自動生成も実行）
+   */
+  const loadDailyTasks = async () => {
+    try {
+      setError(null);
+      // まず今日分のタスクを自動生成
+      await taskAPI.generateTodayTasks();
+      // その後デイリータスクを取得
+      const fetchedDailyTasks = await taskAPI.getDailyTasks();
+      setDailyTasks(fetchedDailyTasks);
+    } catch (err) {
+      console.error('デイリータスク取得エラー:', err);
+      setError('エラーが発生しました。デイリータスクの取得に失敗しました。');
+    }
+  };
+
+  /**
    * 新しいタスクを作成
    */
   const handleCreateTask = async (taskData: CreateTaskData) => {
@@ -39,6 +62,7 @@ const Tasks: React.FC = () => {
       setError(null);
       await taskAPI.createTask(taskData);
       await loadTasks();
+      await loadDailyTasks(); // デイリータスクも更新
     } catch (err) {
       console.error('タスク作成エラー:', err);
       setError('エラーが発生しました。タスクの作成に失敗しました。');
@@ -54,6 +78,7 @@ const Tasks: React.FC = () => {
       const newStatus = task.status === 'pending' ? 'completed' : 'pending';
       await taskAPI.updateTask(task.id, { status: newStatus });
       await loadTasks();
+      await loadDailyTasks(); // デイリータスクも更新
     } catch (err) {
       console.error('タスク更新エラー:', err);
       setError('エラーが発生しました。タスクの更新に失敗しました。');
@@ -68,6 +93,7 @@ const Tasks: React.FC = () => {
       setError(null);
       await taskAPI.updateTask(task.id, updateData);
       await loadTasks();
+      await loadDailyTasks(); // デイリータスクも更新
     } catch (err) {
       console.error('タスク編集エラー:', err);
       setError('エラーが発生しました。タスクの編集に失敗しました。');
@@ -82,10 +108,25 @@ const Tasks: React.FC = () => {
       setError(null);
       await taskAPI.deleteTask(task.id);
       await loadTasks();
+      await loadDailyTasks(); // デイリータスクも更新
     } catch (err) {
       console.error('タスク削除エラー:', err);
       setError('エラーが発生しました。タスクの削除に失敗しました。');
     }
+  };
+
+  /**
+   * タブ切り替え処理
+   */
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+  };
+
+  /**
+   * 表示するタスク一覧を取得
+   */
+  const getDisplayTasks = (): Task[] => {
+    return activeTab === 'daily' ? dailyTasks : tasks;
   };
 
   return (
@@ -95,6 +136,22 @@ const Tasks: React.FC = () => {
         <p>タスクの作成・編集・管理を行います</p>
       </header>
       
+      {/* タブナビゲーション */}
+      <div className="tab-navigation">
+        <button 
+          className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => handleTabChange('all')}
+        >
+          📑 すべてのタスク ({tasks.length})
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'daily' ? 'active' : ''}`}
+          onClick={() => handleTabChange('daily')}
+        >
+          ☀️ デイリータスク ({dailyTasks.length})
+        </button>
+      </div>
+
       <div className="tasks-content">
         {/* エラーメッセージ表示 */}
         {error && (
@@ -109,17 +166,56 @@ const Tasks: React.FC = () => {
             読み込み中...
           </div>
         )}
-        
-        {/* タスク作成フォーム */}
-        <TaskForm onSubmit={handleCreateTask} />
-        
-        {/* タスク一覧 */}
-        <TaskList 
-          tasks={tasks} 
-          onEdit={handleEditTask} 
-          onDelete={handleDeleteTask} 
-          onToggleStatus={handleToggleStatus} 
-        />
+
+        {/* タブ別のコンテンツ */}
+        {activeTab === 'all' && (
+          <>
+            <div className="tab-content-header">
+              <h3>📑 すべてのタスク</h3>
+              <p>通常タスクと繰り返しタスクのすべてが表示されます</p>
+            </div>
+            
+            {/* タスク作成フォーム */}
+            <TaskForm onSubmit={handleCreateTask} />
+            
+            {/* すべてのタスク一覧 */}
+            <TaskList 
+              tasks={tasks} 
+              onEdit={handleEditTask} 
+              onDelete={handleDeleteTask} 
+              onToggleStatus={handleToggleStatus} 
+            />
+          </>
+        )}
+
+        {activeTab === 'daily' && (
+          <>
+            <div className="tab-content-header">
+              <h3>☀️ 今日のデイリータスク</h3>
+              <p>{new Date().toLocaleDateString('ja-JP', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+              })} のタスクです</p>
+            </div>
+            
+            {/* デイリータスク一覧 */}
+            <TaskList 
+              tasks={dailyTasks} 
+              onEdit={handleEditTask} 
+              onDelete={handleDeleteTask} 
+              onToggleStatus={handleToggleStatus} 
+            />
+
+            {dailyTasks.length === 0 && !loading && (
+              <div className="empty-state">
+                <p>📅 今日のデイリータスクがありません</p>
+                <p>繰り返しタスクを作成すると、自動的に毎日のタスクが生成されます。</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

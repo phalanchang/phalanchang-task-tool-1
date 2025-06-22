@@ -8,6 +8,8 @@ const RecurringTasks: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+  const [showEditForm, setShowEditForm] = useState<boolean>(false);
+  const [editingTask, setEditingTask] = useState<RecurringTask | null>(null);
 
   // 初期表示時に繰り返しタスク一覧を取得
   useEffect(() => {
@@ -81,11 +83,61 @@ const RecurringTasks: React.FC = () => {
   }, []);
 
   /**
-   * フォームをキャンセル
+   * 作成フォームをキャンセル
    */
-  const handleCancelForm = useCallback(() => {
+  const handleCancelCreateForm = useCallback(() => {
     setShowCreateForm(false);
   }, []);
+
+  /**
+   * 編集フォームをキャンセル
+   */
+  const handleCancelEditForm = useCallback(() => {
+    setShowEditForm(false);
+    setEditingTask(null);
+  }, []);
+
+  /**
+   * 繰り返しタスク編集処理
+   */
+  const handleEditTask = useCallback((task: RecurringTask) => {
+    setEditingTask(task);
+    setShowEditForm(true);
+  }, []);
+
+  /**
+   * 繰り返しタスク更新処理
+   */
+  const handleUpdateTask = useCallback(async (formData: RecurringTaskFormData) => {
+    if (!editingTask) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // APIリクエスト用のデータを準備
+      const taskData: CreateRecurringTaskData = {
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        is_recurring: true,
+        recurring_pattern: 'daily',
+        recurring_config: {
+          time: formData.time
+        }
+      };
+
+      await taskAPI.updateRecurringTask(editingTask.id, taskData);
+      await loadRecurringTasks();
+      setShowEditForm(false);
+      setEditingTask(null);
+    } catch (err) {
+      console.error('繰り返しタスク更新エラー:', err);
+      setError('繰り返しタスクの更新に失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  }, [editingTask]);
 
   /**
    * 設定されている時間を表示用に整形
@@ -192,7 +244,11 @@ const RecurringTasks: React.FC = () => {
               </div>
               
               <div className="task-actions">
-                <button className="btn btn-secondary btn-sm">
+                <button 
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => handleEditTask(task)}
+                  disabled={loading}
+                >
                   ✏️ 編集
                 </button>
                 <button className="btn btn-secondary btn-sm">
@@ -201,6 +257,7 @@ const RecurringTasks: React.FC = () => {
                 <button 
                   className="btn btn-danger btn-sm"
                   onClick={() => handleDeleteTask(task.id)}
+                  disabled={loading}
                 >
                   🗑️ 削除
                 </button>
@@ -214,7 +271,7 @@ const RecurringTasks: React.FC = () => {
       {showCreateForm && (
         <div 
           className="modal-overlay" 
-          onClick={handleCancelForm}
+          onClick={handleCancelCreateForm}
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
@@ -227,8 +284,35 @@ const RecurringTasks: React.FC = () => {
           >
             <RecurringTaskForm
               onSubmit={handleCreateTask}
-              onCancel={handleCancelForm}
+              onCancel={handleCancelCreateForm}
               loading={loading}
+              mode="create"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 編集フォーム */}
+      {showEditForm && editingTask && (
+        <div 
+          className="modal-overlay" 
+          onClick={handleCancelEditForm}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          aria-describedby="modal-description"
+        >
+          <div 
+            className="modal-content" 
+            onClick={(e) => e.stopPropagation()}
+            role="document"
+          >
+            <RecurringTaskForm
+              onSubmit={handleUpdateTask}
+              onCancel={handleCancelEditForm}
+              loading={loading}
+              mode="edit"
+              editingTask={editingTask}
             />
           </div>
         </div>

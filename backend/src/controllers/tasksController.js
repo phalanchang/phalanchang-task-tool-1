@@ -394,6 +394,95 @@ const getRecurringTasks = async (req, res) => {
   }
 };
 
+/**
+ * 繰り返しタスク（マスタータスク）を更新する
+ * 
+ * API: PUT /api/tasks/recurring/:id
+ * 目的: 特定の繰り返しタスクの設定を更新する
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const updateRecurringTask = async (req, res) => {
+  const id = req.params.id;
+  
+  try {
+    console.log('PUT /api/tasks/recurring/' + id + ' - Received data:', req.body);
+    
+    // リクエストボディから更新データを取得
+    const { title, description, priority, recurring_config } = req.body;
+    
+    // 入力バリデーション
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title is required'
+      });
+    }
+    
+    if (!recurring_config || !recurring_config.time) {
+      return res.status(400).json({
+        success: false,
+        error: 'Recurring configuration with time is required'
+      });
+    }
+    
+    // 時刻形式のバリデーション
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(recurring_config.time)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid time format. Please use HH:MM format'
+      });
+    }
+    
+    // 繰り返しタスクを更新
+    const updateData = {
+      title: title.trim(),
+      description: description ? description.trim() : '',
+      priority: priority || 'medium',
+      recurring_config: JSON.stringify(recurring_config)
+    };
+    
+    const updatedTask = await Task.update(id, updateData);
+    
+    if (!updatedTask) {
+      return res.status(404).json({
+        success: false,
+        error: 'Recurring task not found'
+      });
+    }
+    
+    // レスポンスデータの準備
+    const responseTask = {
+      ...updatedTask,
+      recurring_config: recurring_config // 元のオブジェクト形式で返す
+    };
+    
+    console.log('繰り返しタスク更新成功:', responseTask);
+    
+    res.status(200).json({
+      success: true,
+      data: responseTask,
+      message: 'Recurring task updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('updateRecurringTask エラー詳細:', {
+      message: error.message,
+      stack: error.stack,
+      requestId: id,
+      requestBody: req.body
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update recurring task',
+      message: error.message
+    });
+  }
+};
+
 // 他のファイルから使用できるようにエクスポート
 module.exports = {
   getAllTasks,
@@ -405,5 +494,6 @@ module.exports = {
   getDailyTasks,
   createRecurringTask,
   generateTodayTasks,
-  getRecurringTasks
+  getRecurringTasks,
+  updateRecurringTask
 };

@@ -158,4 +158,114 @@ describe('Task API Service', () => {
       expect(result).toEqual(deletedTask);
     });
   });
+
+  describe('updateRecurringTask', () => {
+    test('繰り返しタスクを正しく更新できること', async () => {
+      const updateTaskData = {
+        title: '更新された朝の運動',
+        description: '45分のジョギング',
+        priority: 'medium' as const,
+        is_recurring: true as const,
+        recurring_pattern: 'daily' as const,
+        recurring_config: { time: '08:00' }
+      };
+
+      const updatedTask: Task = {
+        id: 1,
+        title: '更新された朝の運動',
+        description: '45分のジョギング',
+        status: 'pending',
+        priority: 'medium',
+        created_at: '2025-06-17T10:00:00.000Z',
+        updated_at: '2025-06-17T10:30:00.000Z',
+        is_recurring: true,
+        recurring_pattern: 'daily',
+        recurring_config: { time: '08:00' }
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: updatedTask
+        })
+      } as Response);
+
+      const result = await taskAPI.updateRecurringTask(1, updateTaskData);
+
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3001/api/tasks/recurring/1', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(updateTaskData),
+        credentials: 'same-origin'
+      });
+      expect(result).toEqual(updatedTask);
+    });
+
+    test('ネットワークエラーが適切にハンドリングされること', async () => {
+      const updateTaskData = {
+        title: '更新されたタスク',
+        description: '更新された説明',
+        priority: 'high' as const,
+        is_recurring: true as const,
+        recurring_pattern: 'daily' as const,
+        recurring_config: { time: '09:00' }
+      };
+
+      mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
+
+      await expect(taskAPI.updateRecurringTask(1, updateTaskData))
+        .rejects.toThrow('ネットワークエラーが発生しました。インターネット接続を確認してください');
+    });
+
+    test('APIエラーが適切にハンドリングされること', async () => {
+      const updateTaskData = {
+        title: '更新されたタスク',
+        description: '更新された説明',
+        priority: 'high' as const,
+        is_recurring: true as const,
+        recurring_pattern: 'daily' as const,
+        recurring_config: { time: '09:00' }
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          success: false,
+          error: 'Task not found'
+        })
+      } as Response);
+
+      await expect(taskAPI.updateRecurringTask(1, updateTaskData))
+        .rejects.toThrow('リソースが見つかりません');
+    });
+
+    test('サーバーエラーが適切にハンドリングされること', async () => {
+      const updateTaskData = {
+        title: '更新されたタスク',
+        description: '更新された説明',
+        priority: 'high' as const,
+        is_recurring: true as const,
+        recurring_pattern: 'daily' as const,
+        recurring_config: { time: '09:00' }
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({
+          success: false,
+          error: 'Internal Server Error'
+        })
+      } as Response);
+
+      await expect(taskAPI.updateRecurringTask(1, updateTaskData))
+        .rejects.toThrow('サーバーエラーが発生しました。しばらく時間をおいて再度お試しください');
+    });
+  });
 });

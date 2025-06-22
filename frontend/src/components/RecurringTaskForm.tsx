@@ -1,17 +1,21 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { RecurringTaskFormData } from './TaskList';
+import { RecurringTaskFormData, RecurringTask } from './TaskList';
 import { validateInputSecurity, sanitizeInput } from '../utils/security';
 
 interface RecurringTaskFormProps {
   onSubmit: (data: RecurringTaskFormData) => void;
   onCancel: () => void;
   loading?: boolean;
+  editingTask?: RecurringTask | null; // 編集対象のタスク（編集モード時）
+  mode?: 'create' | 'edit'; // フォームモード
 }
 
 const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({ 
   onSubmit, 
   onCancel, 
-  loading = false 
+  loading = false,
+  editingTask = null,
+  mode = 'create'
 }) => {
   
   /**
@@ -27,12 +31,30 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onCancel, loading]);
-  const [formData, setFormData] = useState<RecurringTaskFormData>({
-    title: '',
-    description: '',
-    priority: 'medium',
-    time: '09:00'
-  });
+  // 編集モード時は既存データで初期化 - useCallbackでメモ化
+  const getInitialFormData = useCallback((): RecurringTaskFormData => {
+    if (mode === 'edit' && editingTask) {
+      return {
+        title: editingTask.title,
+        description: editingTask.description,
+        priority: editingTask.priority,
+        time: editingTask.recurring_config?.time || '09:00'
+      };
+    }
+    return {
+      title: '',
+      description: '',
+      priority: 'medium',
+      time: '09:00'
+    };
+  }, [mode, editingTask]);
+
+  const [formData, setFormData] = useState<RecurringTaskFormData>(() => getInitialFormData());
+
+  // 編集対象が変更された時にフォームデータを更新
+  useEffect(() => {
+    setFormData(getInitialFormData());
+  }, [getInitialFormData]);
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
@@ -148,9 +170,13 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
   return (
     <div className="recurring-task-form">
       <form onSubmit={handleSubmit}>
-        <h3 id="modal-title">🔄 新しい繰り返しタスクを作成</h3>
+        <h3 id="modal-title">
+          {mode === 'edit' ? '✏️ 繰り返しタスクを編集' : '🔄 新しい繰り返しタスクを作成'}
+        </h3>
         <p id="modal-description" className="form-description">
-          毎日実行する新しいタスクを作成します。設定した時刻に実行予定のタスクが自動生成されます。
+          {mode === 'edit' 
+            ? '繰り返しタスクの設定を変更します。変更後は新しい設定でタスクが生成されます。'
+            : '毎日実行する新しいタスクを作成します。設定した時刻に実行予定のタスクが自動生成されます。'}
         </p>
 
         {/* タスク名 */}
@@ -307,12 +333,18 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
             type="submit"
             className="btn btn-primary"
             disabled={loading || !formData.title.trim()}
-            aria-label={loading ? "繰り返しタスクを作成中" : "繰り返しタスクを作成する"}
+            aria-label={loading 
+              ? (mode === 'edit' ? "繰り返しタスクを更新中" : "繰り返しタスクを作成中") 
+              : (mode === 'edit' ? "繰り返しタスクを更新する" : "繰り返しタスクを作成する")}
           >
             {loading ? (
-              <span aria-live="polite">作成中...</span>
+              <span aria-live="polite">
+                {mode === 'edit' ? '更新中...' : '作成中...'}
+              </span>
             ) : (
-              <span>✨ 作成する</span>
+              <span>
+                {mode === 'edit' ? '💾 更新する' : '✨ 作成する'}
+              </span>
             )}
           </button>
         </div>

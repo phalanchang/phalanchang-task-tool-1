@@ -22,6 +22,19 @@ describe('RecurringTaskForm', () => {
     loading: false
   };
 
+  const mockEditingTask = {
+    id: 1,
+    title: '既存のタスク',
+    description: '既存の説明',
+    status: 'pending' as const,
+    priority: 'high' as const,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    is_recurring: true as const,
+    recurring_pattern: 'daily' as const,
+    recurring_config: { time: '08:30' }
+  };
+
   describe('レンダリング', () => {
     it('フォームが正しく表示される', () => {
       render(<RecurringTaskForm {...defaultProps} />);
@@ -292,6 +305,139 @@ describe('RecurringTaskForm', () => {
       
       expect(screen.getByRole('button', { name: /作成中/ })).toBeInTheDocument();
       expect(screen.getByText('作成中...')).toBeInTheDocument();
+    });
+  });
+
+  describe('編集モード', () => {
+    it('編集モードでフォームが正しく表示される', () => {
+      render(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={mockEditingTask} 
+        />
+      );
+      
+      expect(screen.getByRole('heading', { name: /繰り返しタスクを編集/ })).toBeInTheDocument();
+      expect(screen.getByDisplayValue('既存のタスク')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('既存の説明')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('08:30')).toBeInTheDocument();
+      expect(screen.getByLabelText(/高優先度/)).toBeChecked();
+      expect(screen.getByRole('button', { name: /更新する/ })).toBeInTheDocument();
+    });
+
+    it('編集モードで説明文が変更される', () => {
+      render(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={mockEditingTask} 
+        />
+      );
+      
+      expect(screen.getByText(/繰り返しタスクの設定を変更します/)).toBeInTheDocument();
+    });
+
+    it('編集モードでフォーム送信が正しく動作する', async () => {
+      const user = userEvent.setup();
+      render(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={mockEditingTask} 
+        />
+      );
+      
+      // 既存の値を変更
+      const titleInput = screen.getByDisplayValue('既存のタスク');
+      await user.clear(titleInput);
+      await user.type(titleInput, '更新されたタスク');
+      
+      const descriptionInput = screen.getByDisplayValue('既存の説明');
+      await user.clear(descriptionInput);
+      await user.type(descriptionInput, '更新された説明');
+      
+      const timeSelect = screen.getByDisplayValue('08:30');
+      await user.selectOptions(timeSelect, '09:00');
+      
+      // 優先度を変更
+      const mediumPriorityRadio = screen.getByLabelText(/中優先度/);
+      await user.click(mediumPriorityRadio);
+      
+      // 送信
+      fireEvent.click(screen.getByRole('button', { name: /更新する/ }));
+      
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith({
+          title: '更新されたタスク',
+          description: '更新された説明',
+          priority: 'medium',
+          time: '09:00'
+        });
+      });
+    });
+
+    it('編集モードのローディング状態が正しく表示される', () => {
+      render(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={mockEditingTask} 
+          loading={true}
+        />
+      );
+      
+      expect(screen.getByRole('button', { name: /更新中/ })).toBeInTheDocument();
+      expect(screen.getByText('更新中...')).toBeInTheDocument();
+    });
+
+    it('編集対象が変更された時にフォームデータが更新される', () => {
+      const { rerender } = render(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={mockEditingTask} 
+        />
+      );
+      
+      expect(screen.getByDisplayValue('既存のタスク')).toBeInTheDocument();
+      
+      // 異なる編集対象に変更
+      const newEditingTask = {
+        ...mockEditingTask,
+        id: 2,
+        title: '別のタスク',
+        description: '別の説明',
+        priority: 'low' as const,
+        recurring_config: { time: '15:00' }
+      };
+      
+      rerender(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={newEditingTask} 
+        />
+      );
+      
+      expect(screen.getByDisplayValue('別のタスク')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('別の説明')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('15:00')).toBeInTheDocument();
+      expect(screen.getByLabelText(/低優先度/)).toBeChecked();
+    });
+
+    it('editingTaskがnullの場合、デフォルト値が使用される', () => {
+      render(
+        <RecurringTaskForm 
+          {...defaultProps} 
+          mode="edit" 
+          editingTask={null} 
+        />
+      );
+      
+      expect(screen.getByDisplayValue('')).toBeInTheDocument(); // title
+      expect(screen.getByDisplayValue('09:00')).toBeInTheDocument(); // time
+      expect(screen.getByLabelText(/中優先度/)).toBeChecked(); // priority
     });
   });
 });

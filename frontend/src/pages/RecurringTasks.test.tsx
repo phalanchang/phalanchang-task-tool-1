@@ -336,6 +336,192 @@ describe('RecurringTasks', () => {
     });
   });
 
+  describe('編集機能', () => {
+    it('編集ボタンで編集モーダルが開く', async () => {
+      const user = userEvent.setup();
+      render(<RecurringTasks />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('朝の運動')).toBeInTheDocument();
+      });
+      
+      const editButtons = screen.getAllByRole('button', { name: /編集/ });
+      await user.click(editButtons[0]);
+      
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /繰り返しタスクを編集/ })).toBeInTheDocument();
+      
+      // 既存データが設定されていることを確認
+      expect(screen.getByDisplayValue('朝の運動')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('30分のジョギング')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('07:00')).toBeInTheDocument();
+      expect(screen.getByLabelText(/高優先度/)).toBeChecked();
+    });
+
+    it('編集フォームでタスクが更新される', async () => {
+      const user = userEvent.setup();
+      const updatedTask = {
+        id: 1,
+        title: '更新された朝の運動',
+        description: '45分のジョギング',
+        status: 'pending' as const,
+        priority: 'medium' as const,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+        is_recurring: true,
+        recurring_pattern: 'daily' as const,
+        recurring_config: { time: '08:00' }
+      };
+      
+      mockTaskAPI.updateRecurringTask.mockResolvedValue(updatedTask);
+      mockTaskAPI.getRecurringTasks
+        .mockResolvedValueOnce(mockRecurringTasks)
+        .mockResolvedValueOnce([updatedTask, mockRecurringTasks[1]]);
+      
+      render(<RecurringTasks />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('朝の運動')).toBeInTheDocument();
+      });
+      
+      // 編集モーダルを開く
+      const editButtons = screen.getAllByRole('button', { name: /編集/ });
+      await user.click(editButtons[0]);
+      
+      // フォームを編集
+      const titleInput = screen.getByDisplayValue('朝の運動');
+      await user.clear(titleInput);
+      await user.type(titleInput, '更新された朝の運動');
+      
+      const descriptionInput = screen.getByDisplayValue('30分のジョギング');
+      await user.clear(descriptionInput);
+      await user.type(descriptionInput, '45分のジョギング');
+      
+      const timeSelect = screen.getByDisplayValue('07:00');
+      await user.selectOptions(timeSelect, '08:00');
+      
+      const mediumPriorityRadio = screen.getByLabelText(/中優先度/);
+      await user.click(mediumPriorityRadio);
+      
+      // 送信
+      await user.click(screen.getByRole('button', { name: /更新する/ }));
+      
+      await waitFor(() => {
+        expect(mockTaskAPI.updateRecurringTask).toHaveBeenCalledWith(1, {
+          title: '更新された朝の運動',
+          description: '45分のジョギング',
+          priority: 'medium',
+          is_recurring: true,
+          recurring_pattern: 'daily',
+          recurring_config: { time: '08:00' }
+        });
+      });
+      
+      // モーダルが閉じることを確認
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('編集フォームのキャンセルでモーダルが閉じる', async () => {
+      const user = userEvent.setup();
+      render(<RecurringTasks />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('朝の運動')).toBeInTheDocument();
+      });
+      
+      // 編集モーダルを開く
+      const editButtons = screen.getAllByRole('button', { name: /編集/ });
+      await user.click(editButtons[0]);
+      
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      
+      // キャンセル
+      await user.click(screen.getByRole('button', { name: /キャンセル/ }));
+      
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('編集エラーが表示される', async () => {
+      const user = userEvent.setup();
+      mockTaskAPI.updateRecurringTask.mockRejectedValue(new Error('更新エラー'));
+      
+      render(<RecurringTasks />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('朝の運動')).toBeInTheDocument();
+      });
+      
+      // 編集モーダルを開く
+      const editButtons = screen.getAllByRole('button', { name: /編集/ });
+      await user.click(editButtons[0]);
+      
+      // フォームに入力
+      const titleInput = screen.getByDisplayValue('朝の運動');
+      await user.type(titleInput, ' - 更新');
+      
+      // 送信
+      await user.click(screen.getByRole('button', { name: /更新する/ }));
+      
+      await waitFor(() => {
+        expect(screen.getByText(/繰り返しタスクの更新に失敗しました/)).toBeInTheDocument();
+      });
+    });
+
+    it('ローディング中は編集ボタンが無効になる', () => {
+      // 初期ローディング状態をシミュレート
+      mockTaskAPI.getRecurringTasks.mockImplementation(
+        () => new Promise(() => {}) // 永続的にペンディング
+      );
+      
+      render(<RecurringTasks />);
+      
+      expect(screen.getByText(/読み込み中/)).toBeInTheDocument();
+    });
+  });
+
+  describe('API統合', () => {
+    beforeEach(() => {
+      // updateRecurringTaskのモック設定
+      mockTaskAPI.updateRecurringTask = jest.fn();
+    });
+
+    it('updateRecurringTask APIが正しく呼ばれる', async () => {
+      const user = userEvent.setup();
+      const updatedTask = { ...mockRecurringTasks[0] };
+      mockTaskAPI.updateRecurringTask.mockResolvedValue(updatedTask);
+      
+      render(<RecurringTasks />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('朝の運動')).toBeInTheDocument();
+      });
+      
+      // 編集モーダルを開いて送信
+      const editButtons = screen.getAllByRole('button', { name: /編集/ });
+      await user.click(editButtons[0]);
+      
+      await user.click(screen.getByRole('button', { name: /更新する/ }));
+      
+      await waitFor(() => {
+        expect(mockTaskAPI.updateRecurringTask).toHaveBeenCalledWith(
+          1, // タスクID
+          expect.objectContaining({
+            title: '朝の運動',
+            description: '30分のジョギング',
+            priority: 'high',
+            is_recurring: true,
+            recurring_pattern: 'daily',
+            recurring_config: { time: '07:00' }
+          })
+        );
+      });
+    });
+  });
+
   describe('アクセシビリティ', () => {
     it('適切なARIA属性が設定されている', async () => {
       render(<RecurringTasks />);
@@ -352,6 +538,24 @@ describe('RecurringTasks', () => {
       expect(modal).toHaveAttribute('aria-modal', 'true');
       expect(modal).toHaveAttribute('aria-labelledby');
       expect(modal).toHaveAttribute('aria-describedby');
+    });
+
+    it('編集モーダルのアクセシビリティが正しく設定されている', async () => {
+      const user = userEvent.setup();
+      render(<RecurringTasks />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('朝の運動')).toBeInTheDocument();
+      });
+      
+      // 編集モーダルを開く
+      const editButtons = screen.getAllByRole('button', { name: /編集/ });
+      await user.click(editButtons[0]);
+      
+      const modal = screen.getByRole('dialog');
+      expect(modal).toHaveAttribute('aria-modal', 'true');
+      expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
+      expect(modal).toHaveAttribute('aria-describedby', 'modal-description');
     });
   });
 });

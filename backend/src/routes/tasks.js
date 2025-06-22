@@ -7,6 +7,7 @@ router.get('/daily', tasksController.getDailyTasks);                // デイリ
 router.post('/generate-today', tasksController.generateTodayTasks); // 今日分タスク生成
 router.get('/recurring', tasksController.getRecurringTasks);        // 繰り返しタスク一覧取得
 router.post('/recurring', tasksController.createRecurringTask);     // 繰り返しタスク作成
+router.put('/recurring/:id', tasksController.updateRecurringTask);  // 繰り返しタスク更新
 
 // 既存のタスク関連ルート（一般的なルートを後に定義）
 router.get('/', tasksController.getAllTasks);

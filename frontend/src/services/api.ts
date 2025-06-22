@@ -133,17 +133,27 @@ export const taskAPI = {
   },
 
   /**
-   * タスクを更新
+   * タスクを更新（CSRF対策含む）
    */
   async updateTask(id: number, updateData: UpdateTaskData): Promise<Task> {
-    const response = await fetch(`${API_BASE_URL}/api/tasks/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updateData),
-    });
-    return handleResponse<Task>(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCSRFToken(),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(updateData),
+        credentials: 'same-origin'
+      });
+      return handleResponse<Task>(response);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(ERROR_MESSAGES.NETWORK_ERROR);
+      }
+      throw error;
+    }
   },
 
   /**
@@ -197,6 +207,30 @@ export const taskAPI = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/tasks/recurring`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCSRFToken(),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(taskData),
+        credentials: 'same-origin'
+      });
+      return handleResponse<Task>(response);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(ERROR_MESSAGES.NETWORK_ERROR);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * 繰り返しタスク（マスタータスク）を更新
+   */
+  async updateRecurringTask(id: number, taskData: CreateRecurringTaskData): Promise<Task> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/recurring/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCSRFToken(),

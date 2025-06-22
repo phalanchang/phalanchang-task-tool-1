@@ -252,11 +252,158 @@ const deleteTask = async (req, res) => {
   }
 };
 
+/**
+ * 毎日タスク（デイリータスク）を取得する
+ * 
+ * API: GET /api/tasks/daily
+ * 目的: 当日分の繰り返しタスクインスタンスのみを取得
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const getDailyTasks = async (req, res) => {
+  try {
+    // 今日の日付を取得
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+    
+    // 今日のデイリータスクを取得
+    const dailyTasks = await Task.findDailyTasks(today);
+    
+    res.status(200).json({
+      success: true,
+      data: dailyTasks,
+      count: dailyTasks.length,
+      date: today
+    });
+  } catch (error) {
+    console.error('デイリータスク取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch daily tasks',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * 繰り返しタスク（マスタータスク）を作成する
+ * 
+ * API: POST /api/tasks/recurring
+ * 目的: 毎日タスクのマスタータスクを作成
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const createRecurringTask = async (req, res) => {
+  try {
+    const { title, description, priority, recurring_config } = req.body;
+    
+    // 毎日タスクのマスタータスクを作成
+    const newRecurringTask = await Task.createRecurring({
+      title,
+      description,
+      priority,
+      is_recurring: true,
+      recurring_pattern: 'daily',
+      recurring_config
+    });
+    
+    res.status(201).json({
+      success: true,
+      data: newRecurringTask
+    });
+  } catch (error) {
+    if (error.message.includes('必須') || error.message.includes('文字以内')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: error.message
+      });
+    }
+    
+    console.error('繰り返しタスク作成エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create recurring task',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * 今日分のタスクインスタンスを生成する
+ * 
+ * API: POST /api/tasks/generate-today
+ * 目的: ページアクセス時に今日分のタスクが生成されているかチェックし、未生成の場合は作成
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const generateTodayTasks = async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 今日分のタスク生成処理
+    const result = await Task.generateTasksForDate(today);
+    
+    res.status(200).json({
+      success: true,
+      message: `Generated ${result.generated} new daily tasks for ${today}`,
+      data: {
+        date: today,
+        generated: result.generated,
+        existing: result.existing,
+        tasks: result.tasks
+      }
+    });
+  } catch (error) {
+    console.error('今日分タスク生成エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate today tasks',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * 繰り返しタスク（マスタータスク）一覧を取得する
+ * 
+ * API: GET /api/tasks/recurring
+ * 目的: 登録されている繰り返しタスクのマスタータスク一覧を取得
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const getRecurringTasks = async (req, res) => {
+  try {
+    const recurringTasks = await Task.findRecurring();
+    
+    res.status(200).json({
+      success: true,
+      data: recurringTasks,
+      count: recurringTasks.length
+    });
+  } catch (error) {
+    console.error('繰り返しタスク一覧取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch recurring tasks',
+      message: error.message
+    });
+  }
+};
+
 // 他のファイルから使用できるようにエクスポート
 module.exports = {
   getAllTasks,
   getTaskById,
   createTask,
   updateTask,
-  deleteTask
+  deleteTask,
+  // 毎日タスク関連の新しいメソッド
+  getDailyTasks,
+  createRecurringTask,
+  generateTodayTasks,
+  getRecurringTasks
 };

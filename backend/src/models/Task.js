@@ -343,6 +343,207 @@ class Task {
       }
     }
   }
+
+  /**
+   * デイリータスク（今日の繰り返しタスクインスタンス）を取得
+   * @param {string} date - 日付（YYYY-MM-DD形式）
+   * @returns {Promise<Array>} デイリータスク一覧
+   */
+  static async findDailyTasks(date) {
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      const [rows] = await connection.execute(
+        `SELECT * FROM tasks 
+         WHERE is_recurring = FALSE 
+           AND source_task_id IS NOT NULL 
+           AND scheduled_date = ?
+         ORDER BY 
+           FIELD(priority, 'high', 'medium', 'low'),
+           created_at DESC`,
+        [date]
+      );
+
+      return rows;
+
+    } catch (error) {
+      console.error('デイリータスク取得エラー:', error);
+      throw new Error(`デイリータスクの取得に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * 繰り返しタスク（マスタータスク）を作成
+   * @param {Object} taskData - 繰り返しタスクデータ
+   * @returns {Promise<Object>} 作成された繰り返しタスク
+   */
+  static async createRecurring(taskData) {
+    // 基本バリデーション
+    this.validateTaskData(taskData);
+    const sanitizedData = this.sanitizeTaskData(taskData);
+
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      // 繰り返しタスクとして挿入
+      const [result] = await connection.execute(
+        `INSERT INTO tasks (title, description, status, priority, is_recurring, recurring_pattern, recurring_config) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          sanitizedData.title,
+          sanitizedData.description,
+          sanitizedData.status,
+          sanitizedData.priority,
+          sanitizedData.is_recurring,
+          sanitizedData.recurring_pattern,
+          JSON.stringify(sanitizedData.recurring_config)
+        ]
+      );
+
+      // 作成されたタスクを取得
+      const [rows] = await connection.execute(
+        'SELECT * FROM tasks WHERE id = ?',
+        [result.insertId]
+      );
+
+      return rows[0];
+
+    } catch (error) {
+      console.error('繰り返しタスク作成エラー:', error);
+      throw new Error(`繰り返しタスクの作成に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * 繰り返しタスク（マスタータスク）一覧を取得
+   * @returns {Promise<Array>} 繰り返しタスク一覧
+   */
+  static async findRecurring() {
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      const [rows] = await connection.execute(
+        `SELECT * FROM tasks 
+         WHERE is_recurring = TRUE 
+         ORDER BY 
+           FIELD(priority, 'high', 'medium', 'low'),
+           created_at DESC`
+      );
+
+      return rows;
+
+    } catch (error) {
+      console.error('繰り返しタスク一覧取得エラー:', error);
+      throw new Error(`繰り返しタスク一覧の取得に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * 指定日のタスクインスタンスを生成
+   * @param {string} date - 日付（YYYY-MM-DD形式）
+   * @returns {Promise<Object>} 生成結果
+   */
+  static async generateTasksForDate(date) {
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      // 既存の当日分タスクを確認
+      const [existingTasks] = await connection.execute(
+        `SELECT source_task_id FROM tasks 
+         WHERE is_recurring = FALSE 
+           AND source_task_id IS NOT NULL 
+           AND scheduled_date = ?`,
+        [date]
+      );
+
+      const existingSourceIds = existingTasks.map(task => task.source_task_id);
+
+      // 毎日タスクのマスタータスクを取得
+      const [masterTasks] = await connection.execute(
+        `SELECT * FROM tasks 
+         WHERE is_recurring = TRUE 
+           AND recurring_pattern = 'daily'`
+      );
+
+      // 未生成のタスクをフィルタリング
+      const tasksToGenerate = masterTasks.filter(
+        masterTask => !existingSourceIds.includes(masterTask.id)
+      );
+
+      let generatedTasks = [];
+
+      // 未生成のタスクインスタンスを作成
+      for (const masterTask of tasksToGenerate) {
+        const [result] = await connection.execute(
+          `INSERT INTO tasks (title, description, status, priority, is_recurring, source_task_id, scheduled_date)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            `${masterTask.title} (${date})`,
+            masterTask.description,
+            'pending',
+            masterTask.priority,
+            false,
+            masterTask.id,
+            date
+          ]
+        );
+
+        // 生成されたタスクを取得
+        const [newTaskRows] = await connection.execute(
+          'SELECT * FROM tasks WHERE id = ?',
+          [result.insertId]
+        );
+
+        generatedTasks.push(newTaskRows[0]);
+      }
+
+      // 最終的な当日分タスク一覧を取得
+      const [allTodayTasks] = await connection.execute(
+        `SELECT * FROM tasks 
+         WHERE is_recurring = FALSE 
+           AND source_task_id IS NOT NULL 
+           AND scheduled_date = ?
+         ORDER BY 
+           FIELD(priority, 'high', 'medium', 'low'),
+           created_at DESC`,
+        [date]
+      );
+
+      return {
+        generated: generatedTasks.length,
+        existing: existingTasks.length,
+        tasks: allTodayTasks
+      };
+
+    } catch (error) {
+      console.error('タスク生成エラー:', error);
+      throw new Error(`タスクの生成に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
 }
 
 module.exports = Task;

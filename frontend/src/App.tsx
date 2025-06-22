@@ -5,6 +5,7 @@ import './pages/Pages.css';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
+import RecurringTasks from './pages/RecurringTasks';
 import Settings from './pages/Settings';
 
 // ルーター対応のメインコンポーネント
@@ -75,6 +76,7 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/tasks" element={<Tasks />} />
+            <Route path="/recurring-tasks" element={<RecurringTasks />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

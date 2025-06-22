@@ -61,7 +61,8 @@ describe('Task API Service', () => {
     test('新しいタスクを正しく作成できること', async () => {
       const newTaskData = {
         title: '新しいタスク',
-        description: '新しいタスクの説明'
+        description: '新しいタスクの説明',
+        priority: 'medium' as const
       };
 
       const createdTask: Task = {

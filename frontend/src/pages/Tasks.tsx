@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import TaskList, { Task } from '../components/TaskList';
+import TaskList, { Task, CreateTaskData } from '../components/TaskList';
 import TaskForm from '../components/TaskForm';
-import { taskAPI, CreateTaskData, UpdateTaskData } from '../services/api';
+import { taskAPI, UpdateTaskData } from '../services/api';
 
 // タブの種類
 type TabType = 'all' | 'daily';
@@ -122,12 +122,6 @@ const Tasks: React.FC = () => {
     setActiveTab(tab);
   };
 
-  /**
-   * 表示するタスク一覧を取得
-   */
-  const getDisplayTasks = (): Task[] => {
-    return activeTab === 'daily' ? dailyTasks : tasks;
-  };
 
   return (
     <div className="page-container">

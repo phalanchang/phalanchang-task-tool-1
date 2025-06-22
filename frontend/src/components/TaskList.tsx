@@ -8,6 +8,11 @@ import React from 'react';
 import TaskCard from './TaskCard';
 import './TaskList.css';
 
+// 繰り返しタスク設定の型定義
+export interface RecurringConfig {
+  time: string;
+}
+
 // タスクの型定義
 export interface Task {
   id: number;
@@ -17,6 +22,40 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   created_at: string;
   updated_at: string;
+  is_recurring?: boolean;
+  recurring_pattern?: 'daily' | 'weekly' | 'monthly';
+  recurring_config?: RecurringConfig;
+  source_task_id?: number;
+  scheduled_date?: string;
+}
+
+// 繰り返しタスクの型定義
+export interface RecurringTask extends Task {
+  is_recurring: true;
+  recurring_pattern: 'daily' | 'weekly' | 'monthly';
+  recurring_config: RecurringConfig;
+}
+
+// タスク作成用の型定義
+export interface CreateTaskData {
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+}
+
+// 繰り返しタスク作成用の型定義
+export interface CreateRecurringTaskData extends CreateTaskData {
+  is_recurring: true;
+  recurring_pattern: 'daily' | 'weekly' | 'monthly';
+  recurring_config: RecurringConfig;
+}
+
+// フォームデータの型定義
+export interface RecurringTaskFormData {
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  time: string;
 }
 
 interface TaskListProps {

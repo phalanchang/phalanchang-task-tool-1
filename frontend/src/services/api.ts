@@ -4,17 +4,10 @@
  * バックエンドAPIとの通信を担当
  */
 
-import { Task } from '../components/TaskList';
+import { Task, CreateTaskData, CreateRecurringTaskData } from '../components/TaskList';
 
 // API のベースURL
 const API_BASE_URL = 'http://localhost:3001';
-
-// タスク作成用のデータ型
-export interface CreateTaskData {
-  title: string;
-  description: string;
-  priority?: 'low' | 'medium' | 'high';
-}
 
 // タスク更新用のデータ型
 export interface UpdateTaskData {
@@ -33,21 +26,74 @@ interface APIResponse<T> {
   count?: number;
 }
 
+// エラーメッセージ定義
+const ERROR_MESSAGES = {
+  TITLE_REQUIRED: 'タスク名を入力してください',
+  TITLE_TOO_LONG: 'タスク名は255文字以内で入力してください',
+  DESCRIPTION_TOO_LONG: '説明は1000文字以内で入力してください',
+  INVALID_TIME: '正しい時間形式（例：09:30）で入力してください',
+  NETWORK_ERROR: 'ネットワークエラーが発生しました。インターネット接続を確認してください',
+  SERVER_ERROR: 'サーバーエラーが発生しました。しばらく時間をおいて再度お試しください',
+  NOT_FOUND: 'リソースが見つかりません',
+  UNAUTHORIZED: '許可されていない操作です',
+  FORBIDDEN: 'アクセスが禁止されています',
+  VALIDATION_ERROR: '入力値にエラーがあります'
+} as const;
+
 /**
- * HTTP エラーをハンドリング
+ * CSRFトークンを取得
+ */
+const getCSRFToken = (): string => {
+  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+};
+
+/**
+ * HTTP エラーをハンドリング（強化版）
  */
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    let errorMessage: string;
+    
+    switch (response.status) {
+      case 400:
+        errorMessage = ERROR_MESSAGES.VALIDATION_ERROR;
+        break;
+      case 401:
+        errorMessage = ERROR_MESSAGES.UNAUTHORIZED;
+        break;
+      case 403:
+        errorMessage = ERROR_MESSAGES.FORBIDDEN;
+        break;
+      case 404:
+        errorMessage = ERROR_MESSAGES.NOT_FOUND;
+        break;
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        errorMessage = ERROR_MESSAGES.SERVER_ERROR;
+        break;
+      default:
+        errorMessage = `HTTPエラー: ${response.status}`;
+    }
+    
+    throw new Error(errorMessage);
   }
   
-  const data: APIResponse<T> = await response.json();
-  
-  if (!data.success) {
-    throw new Error(data.error || 'API request failed');
+  try {
+    const data: APIResponse<T> = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'API request failed');
+    }
+    
+    return data.data;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error('サーバーからの応答が正しくありません');
+    }
+    throw error;
   }
-  
-  return data.data;
 };
 
 /**
@@ -63,17 +109,27 @@ export const taskAPI = {
   },
 
   /**
-   * 新しいタスクを作成
+   * 新しいタスクを作成（CSRF対策含む）
    */
   async createTask(taskData: CreateTaskData): Promise<Task> {
-    const response = await fetch(`${API_BASE_URL}/api/tasks`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(taskData),
-    });
-    return handleResponse<Task>(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCSRFToken(),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(taskData),
+        credentials: 'same-origin'
+      });
+      return handleResponse<Task>(response);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(ERROR_MESSAGES.NETWORK_ERROR);
+      }
+      throw error;
+    }
   },
 
   /**
@@ -135,16 +191,26 @@ export const taskAPI = {
   },
 
   /**
-   * 新しい繰り返しタスク（マスタータスク）を作成
+   * 新しい繰り返しタスク（マスタータスク）を作成（CSRF対策含む）
    */
-  async createRecurringTask(taskData: CreateTaskData & { recurring_config: any }): Promise<Task> {
-    const response = await fetch(`${API_BASE_URL}/api/tasks/recurring`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(taskData),
-    });
-    return handleResponse<Task>(response);
+  async createRecurringTask(taskData: CreateRecurringTaskData): Promise<Task> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/recurring`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCSRFToken(),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(taskData),
+        credentials: 'same-origin'
+      });
+      return handleResponse<Task>(response);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(ERROR_MESSAGES.NETWORK_ERROR);
+      }
+      throw error;
+    }
   }
 };

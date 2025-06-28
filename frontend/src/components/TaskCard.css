@@ -33,11 +33,14 @@
   background: var(--card-background);
   border-radius: var(--border-radius);
   box-shadow: 0 2px 4px var(--card-shadow);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
   border-left: 4px solid transparent;
   transition: all 0.2s ease-in-out;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
 .task-card:hover {
@@ -60,45 +63,67 @@
 
 /* ステータス別のスタイル */
 .task-card--completed {
-  opacity: 0.8;
-  background: #f9f9f9;
+  opacity: 0.85;
+  background: #e8e8e8;
 }
 
 .task-card--pending {
   background: var(--card-background);
 }
 
+/* ヘッダー行スタイル */
+.task-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
 /* タイトルスタイル */
 .task-card__title {
-  margin: 0 0 var(--spacing-sm) 0;
+  margin: 0;
   color: var(--text-primary);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.3;
+  flex: 1;
+}
+
+/* バッジコンテナ */
+.task-card__badges {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* コンテンツ行スタイル */
+.task-card__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+/* 説明エリア */
+.task-card__description-area {
+  flex: 1;
 }
 
 /* 説明文スタイル */
 .task-card__description {
-  margin: 0 0 var(--spacing-md) 0;
+  margin: 0 0 var(--spacing-xs) 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-/* ステータス・優先度バッジ */
-.task-card__status,
-.task-card__priority {
-  display: inline-block;
-  margin-right: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .status-badge,
 .priority-badge {
   display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: 2px var(--spacing-xs);
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 500;
   color: white;
   text-transform: uppercase;
@@ -127,17 +152,20 @@
 /* アクションボタン */
 .task-card__actions {
   display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
 }
 
 .btn {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border: none;
   border-radius: var(--spacing-xs);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  min-width: 60px;
 }
 
 .btn--toggle {
@@ -162,12 +190,10 @@
 
 /* メタ情報 */
 .task-card__meta {
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid #e0e0e0;
+  margin-top: var(--spacing-xs);
 }
 
 .task-card__created-at {
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
 }

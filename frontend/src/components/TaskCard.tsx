@@ -43,62 +43,67 @@ const TaskCard: React.FC<TaskCardProps> = ({
       className={cardClassName}
       data-testid="task-card"
     >
-      {/* タスクタイトル */}
-      <h3 
-        className="task-card__title"
-        data-testid="task-title"
-      >
-        {task.title}
-      </h3>
-
-      {/* タスク説明 */}
-      {task.description && (
-        <p 
-          className="task-card__description"
-          data-testid="task-description"
+      {/* ヘッダー行：タイトル + ステータス・優先度 */}
+      <div className="task-card__header">
+        <h3 
+          className="task-card__title"
+          data-testid="task-title"
         >
-          {task.description}
-        </p>
-      )}
-
-      {/* ステータス表示 */}
-      <div className="task-card__status">
-        <span className={`status-badge status-badge--${task.status}`}>
-          {task.status === 'pending' ? '未完了' : '完了'}
-        </span>
-      </div>
-
-      {/* 優先度表示 */}
-      <div className="task-card__priority">
-        <span className={`priority-badge priority-badge--${task.priority}`}>
-          {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
-        </span>
-      </div>
-
-      {/* アクションボタン */}
-      <div className="task-card__actions">
-        <button 
-          className="btn btn--toggle"
-          data-testid="toggle-status-button"
-          onClick={() => onToggleStatus(task)}
-        >
-          {task.status === 'pending' ? '完了にする' : '未完了にする'}
-        </button>
+          {task.title}
+        </h3>
         
-        <button 
-          className="btn btn--delete"
-          data-testid="delete-button"
-          onClick={() => onDelete(task)}
-        >
-          削除
-        </button>
+        <div className="task-card__badges">
+          {/* ステータス表示 */}
+          <span className={`status-badge status-badge--${task.status}`}>
+            {task.status === 'pending' ? '未完了' : '完了'}
+          </span>
+          
+          {/* 優先度表示 */}
+          <span className={`priority-badge priority-badge--${task.priority}`}>
+            {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
+          </span>
+        </div>
       </div>
 
-      {/* 作成日時表示 */}
-      <div className="task-card__meta">
-        <small className="task-card__created-at">
-          作成: {new Date(task.created_at).toLocaleDateString('ja-JP')}
-        </small>
+      {/* コンテンツ行：説明 + アクションボタン */}
+      <div className="task-card__content">
+        {/* タスク説明 */}
+        <div className="task-card__description-area">
+          {task.description && (
+            <p 
+              className="task-card__description"
+              data-testid="task-description"
+            >
+              {task.description}
+            </p>
+          )}
+          
+          {/* 作成日時表示 */}
+          <div className="task-card__meta">
+            <small className="task-card__created-at">
+              作成: {new Date(task.created_at).toLocaleDateString('ja-JP')}
+            </small>
+          </div>
+        </div>
+
+        {/* アクションボタン */}
+        <div className="task-card__actions">
+          <button 
+            className="btn btn--toggle"
+            data-testid="toggle-status-button"
+            onClick={() => onToggleStatus(task)}
+          >
+            {task.status === 'pending' ? '完了' : '未完了'}
+          </button>
+          
+          <button 
+            className="btn btn--delete"
+            data-testid="delete-button"
+            onClick={() => onDelete(task)}
+          >
+            削除
+          </button>
+        </div>
       </div>
     </div>
   );

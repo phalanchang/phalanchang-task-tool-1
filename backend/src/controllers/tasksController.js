@@ -341,10 +341,14 @@ const createRecurringTask = async (req, res) => {
  */
 const generateTodayTasks = async (req, res) => {
   try {
+    console.log('generateTodayTasks開始');
     const today = new Date().toISOString().split('T')[0];
+    console.log('対象日:', today);
     
     // 今日分のタスク生成処理
+    console.log('Task.generateTasksForDate呼び出し開始');
     const result = await Task.generateTasksForDate(today);
+    console.log('Task.generateTasksForDate完了:', result);
     
     res.status(200).json({
       success: true,
@@ -357,11 +361,17 @@ const generateTodayTasks = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('今日分タスク生成エラー:', error);
+    console.error('今日分タスク生成エラー詳細:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to generate today tasks',
-      message: error.message
+      message: error.message,
+      details: error.code || 'Unknown error'
     });
   }
 };
@@ -483,6 +493,57 @@ const updateRecurringTask = async (req, res) => {
   }
 };
 
+/**
+ * 繰り返しタスク（マスタータスク）を削除する
+ * 
+ * API: DELETE /api/tasks/recurring/:id
+ * 目的: 特定の繰り返しタスクとその関連するデイリータスクインスタンスを削除する
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const deleteRecurringTask = async (req, res) => {
+  try {
+    // URLパラメータからIDを取得
+    const id = req.params.id;
+    
+    // Taskモデルを使用して繰り返しタスクを削除
+    const deletedTask = await Task.deleteRecurringTask(id);
+    
+    // タスクが見つからない場合
+    if (!deletedTask) {
+      return res.status(404).json({
+        success: false,
+        error: 'Recurring task not found'
+      });
+    }
+    
+    // 削除されたタスクの情報を返す
+    res.status(200).json({
+      success: true,
+      data: deletedTask,
+      message: 'Recurring task and related daily tasks deleted successfully'
+    });
+  } catch (error) {
+    // バリデーションエラーの場合は400を返す
+    if (error.message.includes('有効なID')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: error.message
+      });
+    }
+    
+    // その他のエラーは500を返す
+    console.error('繰り返しタスク削除エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete recurring task',
+      message: error.message
+    });
+  }
+};
+
 // 他のファイルから使用できるようにエクスポート
 module.exports = {
   getAllTasks,
@@ -495,5 +556,6 @@ module.exports = {
   createRecurringTask,
   generateTodayTasks,
   getRecurringTasks,
-  updateRecurringTask
+  updateRecurringTask,
+  deleteRecurringTask
 };

@@ -705,6 +705,44 @@
   /* 既存のmainスタイルを使用 */
 }
 
+/* デイリータスク制御ボタン */
+.daily-task-controls {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.toggle-completed-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+}
+
+.toggle-completed-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.toggle-completed-btn:not(.active) {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+}
+
+.toggle-completed-btn:not(.active):hover {
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .page-container {

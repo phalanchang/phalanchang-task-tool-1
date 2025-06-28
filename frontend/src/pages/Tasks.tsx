@@ -13,6 +13,7 @@ const Tasks: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [showCompletedTasks, setShowCompletedTasks] = useState<boolean>(true);
 
   // 初期表示時にタスク一覧を取得
   useEffect(() => {
@@ -62,7 +63,7 @@ const Tasks: React.FC = () => {
       setError(null);
       await taskAPI.createTask(taskData);
       await loadTasks();
-      await loadDailyTasks(); // デイリータスクも更新
+      // 通常タスク作成時はデイリータスク更新不要
     } catch (err) {
       console.error('タスク作成エラー:', err);
       setError('エラーが発生しました。タスクの作成に失敗しました。');
@@ -77,8 +78,16 @@ const Tasks: React.FC = () => {
       setError(null);
       const newStatus = task.status === 'pending' ? 'completed' : 'pending';
       await taskAPI.updateTask(task.id, { status: newStatus });
+      
+      // 更新されたタスクがデイリータスクかどうか確認
+      const isDaily = task.source_task_id !== undefined && task.source_task_id !== null;
+      
       await loadTasks();
-      await loadDailyTasks(); // デイリータスクも更新
+      if (isDaily) {
+        // デイリータスクの場合のみ再取得（生成は行わない）
+        const fetchedDailyTasks = await taskAPI.getDailyTasks();
+        setDailyTasks(fetchedDailyTasks);
+      }
     } catch (err) {
       console.error('タスク更新エラー:', err);
       setError('エラーが発生しました。タスクの更新に失敗しました。');
@@ -92,8 +101,16 @@ const Tasks: React.FC = () => {
     try {
       setError(null);
       await taskAPI.updateTask(task.id, updateData);
+      
+      // 更新されたタスクがデイリータスクかどうか確認
+      const isDaily = task.source_task_id !== undefined && task.source_task_id !== null;
+      
       await loadTasks();
-      await loadDailyTasks(); // デイリータスクも更新
+      if (isDaily) {
+        // デイリータスクの場合のみ再取得（生成は行わない）
+        const fetchedDailyTasks = await taskAPI.getDailyTasks();
+        setDailyTasks(fetchedDailyTasks);
+      }
     } catch (err) {
       console.error('タスク編集エラー:', err);
       setError('エラーが発生しました。タスクの編集に失敗しました。');
@@ -107,8 +124,16 @@ const Tasks: React.FC = () => {
     try {
       setError(null);
       await taskAPI.deleteTask(task.id);
+      
+      // 削除されたタスクがデイリータスクかどうか確認
+      const isDaily = task.source_task_id !== undefined && task.source_task_id !== null;
+      
       await loadTasks();
-      await loadDailyTasks(); // デイリータスクも更新
+      if (isDaily) {
+        // デイリータスクの場合のみ再取得（生成は行わない）
+        const fetchedDailyTasks = await taskAPI.getDailyTasks();
+        setDailyTasks(fetchedDailyTasks);
+      }
     } catch (err) {
       console.error('タスク削除エラー:', err);
       setError('エラーが発生しました。タスクの削除に失敗しました。');
@@ -120,6 +145,24 @@ const Tasks: React.FC = () => {
    */
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
+  };
+
+  /**
+   * 完了タスクの表示/非表示切り替え
+   */
+  const handleToggleCompletedTasks = () => {
+    setShowCompletedTasks(!showCompletedTasks);
+  };
+
+  /**
+   * フィルタリングされたデイリータスクを取得
+   */
+  const getFilteredDailyTasks = () => {
+    if (showCompletedTasks) {
+      return dailyTasks;
+    } else {
+      return dailyTasks.filter(task => task.status !== 'completed');
+    }
   };
 
 
@@ -192,15 +235,32 @@ const Tasks: React.FC = () => {
                 day: 'numeric', 
                 weekday: 'long' 
               })} のタスクです</p>
+              
+              {/* 完了タスク表示/非表示切り替えボタン */}
+              <div className="daily-task-controls">
+                <button 
+                  className={`toggle-completed-btn ${showCompletedTasks ? 'active' : ''}`}
+                  onClick={handleToggleCompletedTasks}
+                >
+                  {showCompletedTasks ? '✅ 完了タスクを表示中' : '❌ 完了タスクを非表示中'}
+                </button>
+              </div>
             </div>
             
             {/* デイリータスク一覧 */}
             <TaskList 
-              tasks={dailyTasks} 
+              tasks={getFilteredDailyTasks()} 
               onEdit={handleEditTask} 
               onDelete={handleDeleteTask} 
               onToggleStatus={handleToggleStatus} 
             />
+
+            {getFilteredDailyTasks().length === 0 && dailyTasks.length > 0 && !loading && (
+              <div className="empty-state">
+                <p>🔍 条件に一致するタスクがありません</p>
+                <p>完了タスクの表示設定を変更してみてください。</p>
+              </div>
+            )}
 
             {dailyTasks.length === 0 && !loading && (
               <div className="empty-state">

@@ -130,7 +130,7 @@ class Task {
   }
 
   /**
-   * すべてのタスクを取得
+   * すべてのタスクを取得（通常タスクのみ、繰り返しタスクとデイリータスクインスタンスは除外）
    * @returns {Promise<Array>} タスク一覧
    */
   static async findAll() {
@@ -140,7 +140,10 @@ class Task {
       await connection.query('USE task_management_app');
 
       const [rows] = await connection.execute(
-        'SELECT * FROM tasks ORDER BY created_at DESC'
+        `SELECT * FROM tasks 
+         WHERE is_recurring = FALSE 
+           AND source_task_id IS NULL 
+         ORDER BY created_at DESC`
       );
 
       return rows;

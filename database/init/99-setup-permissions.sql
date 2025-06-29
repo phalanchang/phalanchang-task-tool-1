@@ -4,14 +4,15 @@
 USE task_management_app;
 
 -- Create application user for backend API
-CREATE USER IF NOT EXISTS 'app_user'@'%' IDENTIFIED BY 'app_password';
+CREATE USER IF NOT EXISTS 'taskapp_user'@'%' IDENTIFIED BY 'TaskApp2025!';
 
--- Grant necessary privileges to app_user
-GRANT SELECT, INSERT, UPDATE, DELETE ON task_management_app.* TO 'app_user'@'%';
+-- Grant necessary privileges to taskapp_user
+GRANT SELECT, INSERT, UPDATE, DELETE ON task_management_app.* TO 'taskapp_user'@'%';
+GRANT CREATE, ALTER, INDEX, DROP ON task_management_app.* TO 'taskapp_user'@'%';
 
--- Allow app_user to use the recurring_tasks table and views
-GRANT SELECT, INSERT, UPDATE, DELETE ON task_management_app.recurring_tasks TO 'app_user'@'%';
-GRANT SELECT ON task_management_app.recurring_tasks_view TO 'app_user'@'%';
+-- Allow taskapp_user to use the recurring_tasks table and views
+GRANT SELECT, INSERT, UPDATE, DELETE ON task_management_app.recurring_tasks TO 'taskapp_user'@'%';
+GRANT SELECT ON task_management_app.recurring_tasks_view TO 'taskapp_user'@'%';
 
 -- Flush privileges to ensure changes take effect
 FLUSH PRIVILEGES;
@@ -29,10 +30,10 @@ SELECT
   Host as allowed_host,
   authentication_string IS NOT NULL as has_password
 FROM mysql.user 
-WHERE User IN ('app_user', 'readonly_user', 'root')
+WHERE User IN ('taskapp_user', 'readonly_user', 'root')
 ORDER BY User;
 
 -- Display user privileges
 SELECT 'User privileges:' AS info;
-SHOW GRANTS FOR 'app_user'@'%';
+SHOW GRANTS FOR 'taskapp_user'@'%';
 SHOW GRANTS FOR 'readonly_user'@'%';

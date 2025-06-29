@@ -8,11 +8,15 @@ async function testConnection() {
   try {
     console.log('MySQL接続テスト開始...');
     
+    // 環境変数から接続情報を取得
+    require('dotenv').config();
+    
     const connection = await mysql.createConnection({
-      host: '10.255.255.254',
-      port: 3306,
-      user: 'root',
-      password: '',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'taskapp_user',
+      password: process.env.DB_PASSWORD || 'TaskApp2025!',
+      database: process.env.DB_NAME || 'task_management_app',
       insecureAuth: true,
       ssl: false
     });

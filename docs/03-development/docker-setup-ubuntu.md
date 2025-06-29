@@ -90,6 +90,23 @@ docker run hello-world
 
 ## トラブルシューティング
 
+### リポジトリ設定エラーが発生する場合
+```bash
+# エラー例: E: Malformed entry 1 in list file /etc/apt/sources.list.d/docker.list
+
+# 破損したdocker.listファイルを削除
+sudo rm /etc/apt/sources.list.d/docker.list
+
+# 手順3-4を再実行してリポジトリを再設定
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# apt updateを再実行
+sudo apt update
+```
+
 ### 権限エラーが発生する場合
 ```bash
 # dockerグループ所属を確認
@@ -117,6 +134,15 @@ sudo systemctl disable podman
 
 # Dockerを再起動
 sudo systemctl restart docker
+```
+
+### AWS EC2固有の問題
+```bash
+# セキュリティグループでポートが開放されているか確認
+# 必要に応じて3000, 3001ポートを開放
+
+# インスタンスタイプがDockerに十分なメモリを持つか確認
+free -h
 ```
 
 ## プロジェクト固有の設定

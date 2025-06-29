@@ -7,8 +7,9 @@ ENV MYSQL_DATABASE=task_management_app
 ENV MYSQL_CHARSET=utf8mb4
 ENV MYSQL_COLLATION=utf8mb4_unicode_ci
 
-# Copy custom MySQL configuration
+# Copy custom MySQL configuration with correct permissions
 COPY my.cnf /etc/mysql/conf.d/
+RUN chmod 644 /etc/mysql/conf.d/my.cnf
 
 # Copy initialization scripts
 COPY init/ /docker-entrypoint-initdb.d/

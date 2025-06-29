@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS tasks (
   INDEX idx_scheduled_date (scheduled_date),
   INDEX idx_daily_tasks (is_recurring, scheduled_date, status),
   
+  -- Unique constraint to prevent duplicate daily task instances
+  CONSTRAINT uk_daily_task_instance UNIQUE (source_task_id, scheduled_date),
+  
   -- Foreign key constraint
   CONSTRAINT fk_source_task FOREIGN KEY (source_task_id) REFERENCES tasks(id) ON DELETE CASCADE
   
@@ -71,8 +74,9 @@ CREATE TABLE IF NOT EXISTS recurring_tasks (
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Recurring tasks management table';
 
--- Create view for backward compatibility
-CREATE VIEW IF NOT EXISTS recurring_tasks_view AS
+-- Create view for backward compatibility (MySQL 8.0 compatible)
+DROP VIEW IF EXISTS recurring_tasks_view;
+CREATE VIEW recurring_tasks_view AS
 SELECT 
   id,
   title,

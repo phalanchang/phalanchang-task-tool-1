@@ -60,4 +60,18 @@ describe('NavigationItem Component', () => {
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('tabIndex', '0');
   });
+
+  it('should render badge when provided', () => {
+    const badge = <span data-testid="test-badge">3</span>;
+    render(<NavigationItem {...mockProps} badge={badge} />);
+    
+    expect(screen.getByTestId('test-badge')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+  });
+
+  it('should not render badge when not provided', () => {
+    render(<NavigationItem {...mockProps} />);
+    
+    expect(screen.queryByTestId('test-badge')).not.toBeInTheDocument();
+  });
 });

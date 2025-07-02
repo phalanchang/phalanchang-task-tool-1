@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import TaskList, { Task, CreateTaskData } from '../components/TaskList';
 import TaskForm from '../components/TaskForm';
+import NotificationBadge from '../components/NotificationBadge';
 import { taskAPI, UpdateTaskData } from '../services/api';
+import { useDailyTaskCount } from '../hooks/useDailyTaskCount';
+import { useDailyTaskRefresh } from '../contexts/DailyTaskContext';
 
 // タブの種類
 type TabType = 'all' | 'daily';
@@ -14,6 +17,12 @@ const Tasks: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [showCompletedTasks, setShowCompletedTasks] = useState<boolean>(true);
+  
+  // Daily タスクの未完了数を取得
+  const { count: dailyTaskCount } = useDailyTaskCount();
+  
+  // バッジ更新トリガー
+  const { triggerRefresh } = useDailyTaskRefresh();
 
   // 初期表示時にタスク一覧を取得
   useEffect(() => {
@@ -87,6 +96,9 @@ const Tasks: React.FC = () => {
         // デイリータスクの場合のみ再取得（生成は行わない）
         const fetchedDailyTasks = await taskAPI.getDailyTasks();
         setDailyTasks(fetchedDailyTasks);
+        
+        // バッジをリアルタイム更新
+        triggerRefresh();
       }
     } catch (err) {
       console.error('タスク更新エラー:', err);
@@ -110,6 +122,9 @@ const Tasks: React.FC = () => {
         // デイリータスクの場合のみ再取得（生成は行わない）
         const fetchedDailyTasks = await taskAPI.getDailyTasks();
         setDailyTasks(fetchedDailyTasks);
+        
+        // バッジをリアルタイム更新
+        triggerRefresh();
       }
     } catch (err) {
       console.error('タスク編集エラー:', err);
@@ -133,6 +148,9 @@ const Tasks: React.FC = () => {
         // デイリータスクの場合のみ再取得（生成は行わない）
         const fetchedDailyTasks = await taskAPI.getDailyTasks();
         setDailyTasks(fetchedDailyTasks);
+        
+        // バッジをリアルタイム更新
+        triggerRefresh();
       }
     } catch (err) {
       console.error('タスク削除エラー:', err);
@@ -155,14 +173,20 @@ const Tasks: React.FC = () => {
   };
 
   /**
-   * フィルタリングされたデイリータスクを取得
+   * フィルタリングされたデイリータスクを取得（表示順番でソート）
    */
   const getFilteredDailyTasks = () => {
-    if (showCompletedTasks) {
-      return dailyTasks;
-    } else {
-      return dailyTasks.filter(task => task.status !== 'completed');
-    }
+    let filteredTasks = showCompletedTasks 
+      ? dailyTasks 
+      : dailyTasks.filter(task => task.status !== 'completed');
+    
+    // 表示順番でソート（マスタータスクのdisplay_orderを参照）
+    return filteredTasks.sort((a, b) => {
+      // display_orderがある場合はそれを使用、ない場合はidを使用
+      const orderA = a.display_order ?? a.id;
+      const orderB = b.display_order ?? b.id;
+      return orderA - orderB;
+    });
   };
 
 
@@ -186,6 +210,7 @@ const Tasks: React.FC = () => {
           onClick={() => handleTabChange('daily')}
         >
           ☀️ デイリータスク ({dailyTasks.length})
+          <NotificationBadge count={dailyTaskCount} />
         </button>
       </div>
 

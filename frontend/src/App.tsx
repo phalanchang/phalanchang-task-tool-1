@@ -7,6 +7,9 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import RecurringTasks from './pages/RecurringTasks';
 import Settings from './pages/Settings';
+import { useDailyTaskCount } from './hooks/useDailyTaskCount';
+import { usePageTitle } from './hooks/usePageTitle';
+import { DailyTaskProvider } from './contexts/DailyTaskContext';
 
 // ルーター対応のメインコンポーネント
 const AppContent: React.FC = () => {
@@ -15,6 +18,12 @@ const AppContent: React.FC = () => {
   
   // サイドバー管理（モバイル用）
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  
+  // Daily タスクの未完了数を取得
+  const { count: dailyTaskCount } = useDailyTaskCount();
+  
+  // ページタイトルにバッジ表示
+  usePageTitle('Task Management App', dailyTaskCount);
 
   /**
    * サイドバーを閉じる
@@ -89,7 +98,9 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <DailyTaskProvider>
+        <AppContent />
+      </DailyTaskProvider>
     </Router>
   );
 }

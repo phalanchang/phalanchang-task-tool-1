@@ -6,6 +6,7 @@ interface NavigationItemProps {
   icon: string;
   isActive: boolean;
   onClick: (path: string) => void;
+  badge?: React.ReactNode;
 }
 
 const NavigationItem: React.FC<NavigationItemProps> = ({ 
@@ -13,7 +14,8 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   label, 
   icon, 
   isActive, 
-  onClick 
+  onClick,
+  badge
 }) => {
   const handleClick = () => {
     onClick(path);
@@ -23,7 +25,9 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   const getIconDisplay = (iconName: string) => {
     const iconMap: { [key: string]: string } = {
       'home': '🏠',
-      'assignment': '📋', 
+      'assignment': '📋',
+      'today': '☀️',
+      'loop': '🔄',
       'settings': '⚙️'
     };
     
@@ -44,6 +48,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
       <span className="nav-label">
         {label}
       </span>
+      {badge}
     </button>
   );
 };

@@ -1,5 +1,7 @@
 import React from 'react';
 import NavigationItem from './NavigationItem';
+import NotificationBadge from './NotificationBadge';
+import { useDailyTaskCount } from '../hooks/useDailyTaskCount';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -10,6 +12,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPath, onNavigate }) => {
+  const { count: dailyTaskCount } = useDailyTaskCount();
+  
   const navigationItems = [
     { path: '/', label: 'ダッシュボード', icon: 'home' },
     { path: '/tasks', label: 'タスク管理', icon: 'assignment' },
@@ -44,6 +48,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPath, onNavig
             icon={item.icon}
             isActive={currentPath === item.path}
             onClick={handleNavigationClick}
+            badge={item.label === 'タスク管理' ? 
+              <NotificationBadge count={dailyTaskCount} /> : 
+              undefined
+            }
           />
         ))}
       </div>

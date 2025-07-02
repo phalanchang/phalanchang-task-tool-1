@@ -1,0 +1,72 @@
+/* Notification Badge Styles */
+.notification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 2px 6px;
+  background-color: #ff4444;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  margin-left: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Badge size variations */
+.notification-badge.small {
+  min-width: 16px;
+  height: 16px;
+  font-size: 10px;
+  padding: 1px 4px;
+}
+
+.notification-badge.large {
+  min-width: 24px;
+  height: 24px;
+  font-size: 14px;
+  padding: 3px 8px;
+}
+
+/* Animation for new notifications */
+@keyframes badge-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.notification-badge.animate {
+  animation: badge-pulse 0.3s ease-in-out;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .notification-badge {
+    border: 2px solid white;
+    font-weight: 700;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .notification-badge.animate {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .notification-badge {
+    display: none;
+  }
+}

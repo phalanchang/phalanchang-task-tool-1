@@ -184,7 +184,7 @@ const Tasks: React.FC = () => {
     return filteredTasks.sort((a, b) => {
       const orderA = ('display_order' in a && a.display_order !== undefined && a.display_order !== null) ? a.display_order : a.id;
       const orderB = ('display_order' in b && b.display_order !== undefined && b.display_order !== null) ? b.display_order : b.id;
-      return (orderA || 0) - (orderB || 0);
+      return Number(orderA || 0) - Number(orderB || 0);
     });
   };
 

@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { taskAPI } from '../services/api';
 import { RecurringTask, RecurringTaskFormData, CreateRecurringTaskData } from '../components/TaskList';
 import RecurringTaskForm from '../components/RecurringTaskForm';
+
+type SortOption = 'priority' | 'created_date' | 'title';
+type SortOrder = 'asc' | 'desc';
 
 const RecurringTasks: React.FC = () => {
   const [recurringTasks, setRecurringTasks] = useState<RecurringTask[]>([]);
@@ -10,6 +13,8 @@ const RecurringTasks: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
   const [showEditForm, setShowEditForm] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<RecurringTask | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('priority');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // 初期表示時に繰り返しタスク一覧を取得
   useEffect(() => {
@@ -68,7 +73,9 @@ const RecurringTasks: React.FC = () => {
         recurring_pattern: 'daily',
         recurring_config: {
           time: formData.time
-        }
+        },
+        display_order: formData.display_order || 1,
+        points: formData.points || 0
       };
 
       await taskAPI.createRecurringTask(taskData);
@@ -115,6 +122,10 @@ const RecurringTasks: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      // デバッグログ: フォームデータの内容確認
+      console.log('handleUpdateTask - フォームデータ受信:', formData);
+      console.log('handleUpdateTask - ポイント値:', formData.points, 'タイプ:', typeof formData.points);
+      
       // APIリクエスト用のデータを準備
       const taskData: CreateRecurringTaskData = {
         title: formData.title,
@@ -124,8 +135,14 @@ const RecurringTasks: React.FC = () => {
         recurring_pattern: 'daily',
         recurring_config: {
           time: formData.time
-        }
+        },
+        display_order: formData.display_order || 1,
+        points: formData.points || 0
       };
+      
+      // デバッグログ: APIリクエストデータの内容確認
+      console.log('handleUpdateTask - APIリクエストデータ:', taskData);
+      console.log('handleUpdateTask - 送信するポイント値:', taskData.points);
 
       await taskAPI.updateRecurringTask(editingTask.id, taskData);
       await loadRecurringTasks();
@@ -173,6 +190,66 @@ const RecurringTasks: React.FC = () => {
     }
   };
 
+  /**
+   * 優先度の数値を取得（ソート用）
+   */
+  const getPriorityValue = (priority: string): number => {
+    switch (priority) {
+      case 'high': return 3;
+      case 'medium': return 2;
+      case 'low': return 1;
+      default: return 0;
+    }
+  };
+
+  /**
+   * タスクをソートする
+   */
+  const sortTasks = useCallback((tasks: RecurringTask[]): RecurringTask[] => {
+    const sorted = [...tasks].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'priority':
+          comparison = getPriorityValue(a.priority) - getPriorityValue(b.priority);
+          break;
+        case 'created_date':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'title':
+          comparison = a.title.localeCompare(b.title, 'ja');
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [sortBy, sortOrder]);
+
+  /**
+   * ソートされたタスク一覧を取得
+   */
+  const sortedTasks = useMemo(() => {
+    return sortTasks(recurringTasks);
+  }, [recurringTasks, sortTasks]);
+
+  /**
+   * ソート設定を変更
+   */
+  const handleSortChange = useCallback((newSortBy: SortOption) => {
+    if (sortBy === newSortBy) {
+      // 同じカラムを選択した場合は順序を反転
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 異なるカラムを選択した場合は新しいカラムで降順から開始
+      setSortBy(newSortBy);
+      setSortOrder('desc');
+    }
+  }, [sortBy, sortOrder]);
+
   return (
     <div className="page-container">
       <header className="page-header">
@@ -180,7 +257,7 @@ const RecurringTasks: React.FC = () => {
         <p>毎日実行する繰り返しタスクの作成・管理を行います</p>
       </header>
 
-      {/* アクションボタン */}
+      {/* アクションボタンとソート制御 */}
       <div className="action-buttons">
         <button 
           className="btn btn-primary"
@@ -188,6 +265,43 @@ const RecurringTasks: React.FC = () => {
         >
           ➕ 新規作成
         </button>
+        
+        <div className="sort-controls">
+          <span className="sort-label">並び順:</span>
+          <button
+            className={`sort-btn ${sortBy === 'priority' ? 'active' : ''}`}
+            onClick={() => handleSortChange('priority')}
+          >
+            🎯 優先度
+            {sortBy === 'priority' && (
+              <span className="sort-icon">
+                {sortOrder === 'desc' ? ' ↓' : ' ↑'}
+              </span>
+            )}
+          </button>
+          <button
+            className={`sort-btn ${sortBy === 'created_date' ? 'active' : ''}`}
+            onClick={() => handleSortChange('created_date')}
+          >
+            📅 作成日
+            {sortBy === 'created_date' && (
+              <span className="sort-icon">
+                {sortOrder === 'desc' ? ' ↓' : ' ↑'}
+              </span>
+            )}
+          </button>
+          <button
+            className={`sort-btn ${sortBy === 'title' ? 'active' : ''}`}
+            onClick={() => handleSortChange('title')}
+          >
+            📝 タイトル
+            {sortBy === 'title' && (
+              <span className="sort-icon">
+                {sortOrder === 'desc' ? ' ↓' : ' ↑'}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* エラーメッセージ表示 */}
@@ -212,7 +326,7 @@ const RecurringTasks: React.FC = () => {
             <p>「新規作成」ボタンから毎日実行するタスクを作成してください。</p>
           </div>
         ) : (
-          recurringTasks.map(task => (
+          sortedTasks.map(task => (
             <div key={task.id} className="recurring-task-card">
               <div className="task-header">
                 <h3 className="task-title">{task.title}</h3>

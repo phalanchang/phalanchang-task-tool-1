@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from
 import './App.css';
 import './pages/Pages.css';
 import Sidebar from './components/Sidebar';
+import PointsDisplay from './components/PointsDisplay';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import RecurringTasks from './pages/RecurringTasks';
@@ -78,6 +79,9 @@ const AppContent: React.FC = () => {
           </button>
           
           <h1>タスク管理アプリ</h1>
+          
+          {/* ポイント表示 */}
+          <PointsDisplay />
         </header>
         
         <main>

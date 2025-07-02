@@ -2,11 +2,115 @@
 
 **美しいカードベースUIで効率的なタスク管理を実現！**
 
+## ⚡ 5分でスタート（新しいUbuntu環境）
+
+**コピペで一発セットアップ！**
+```bash
+# 1. 基本ツールインストール
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y git ca-certificates curl gnupg lsb-release
+
+# 2. Docker インストール
+sudo mkdir -m 0755 -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl start docker && sudo systemctl enable docker
+sudo usermod -aG docker $USER && newgrp docker
+
+# 3. プロジェクト起動
+git clone https://github.com/phalanchang/phalanchang-task-tool-1.git
+cd phalanchang-task-tool-1
+git checkout develop
+cp .env.example .env
+docker compose up -d
+
+# 4. マイグレーション実行
+sleep 30
+docker compose exec database mysql -u root -prootpass task_management_app -e "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS display_order INT NULL AFTER recurring_config; ALTER TABLE tasks ADD INDEX IF NOT EXISTS idx_display_order (display_order);"
+
+# 5. ブラウザで http://localhost:3000 を開く
+echo "🎉 セットアップ完了！ http://localhost:3000 でアクセスしてください"
+```
+
 ## 🚀 今すぐ始める
+
+### 🛠️ Ubuntu環境のセットアップ（初回のみ）
+
+**📋 事前準備チェックリスト**
+- [ ] Ubuntu 20.04 LTS以降
+- [ ] インターネット接続
+- [ ] sudo権限
+
+#### 1️⃣ 必要なツールをインストール
+```bash
+# システム更新
+sudo apt update && sudo apt upgrade -y
+
+# Git インストール
+sudo apt install -y git
+
+# Docker インストール
+sudo apt install -y ca-certificates curl gnupg lsb-release
+
+# Docker公式GPGキー追加
+sudo mkdir -m 0755 -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Dockerリポジトリ追加
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Docker Engine インストール
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Dockerサービス開始
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# ユーザーをdockerグループに追加（sudo不要にする）
+sudo usermod -aG docker $USER
+newgrp docker
+
+# インストール確認
+docker --version
+docker compose version
+git --version
+```
+
+#### 2️⃣ プロジェクトのクローン
+```bash
+# プロジェクトを取得
+git clone https://github.com/phalanchang/phalanchang-task-tool-1.git
+cd phalanchang-task-tool-1
+
+# 最新のdevelopブランチに切り替え
+git checkout develop
+git pull origin develop
+```
+
+#### 3️⃣ 初回セットアップ
+```bash
+# 環境設定ファイルをコピー
+cp .env.example .env
+
+# データベースの初期化（重要）
+docker compose up database -d
+sleep 30  # データベース起動を待機
+
+# マイグレーション実行（display_orderフィールド追加）
+docker compose exec database mysql -u root -prootpass task_management_app -e "
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS display_order INT NULL COMMENT 'Display order for daily tasks' AFTER recurring_config;
+ALTER TABLE tasks ADD INDEX IF NOT EXISTS idx_display_order (display_order);
+UPDATE tasks SET display_order = id WHERE is_recurring = TRUE AND display_order IS NULL;
+SELECT 'Migration completed successfully!' AS message;"
+```
 
 ### 🐳 Docker Compose使用（推奨）
 ```bash
-# 1. 環境設定
+# 1. 環境設定（初回のみ）
 cp .env.example .env
 
 # 2. ワンコマンド起動
@@ -95,16 +199,68 @@ npm start
 
 ## 🐛 困ったときは
 
-### Docker Composeトラブル
+### 🔧 Ubuntu セットアップでのトラブル
+
+#### Docker インストールエラー
 ```bash
-# サービス状態確認
+# リポジトリ設定エラーの場合
+sudo rm /etc/apt/sources.list.d/docker.list
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+```
+
+#### Docker権限エラー
+```bash
+# "permission denied"エラーの場合
+sudo usermod -aG docker $USER
+newgrp docker
+# または一度ログアウト・ログインする
+```
+
+#### Git接続エラー
+```bash
+# SSH設定がない場合はHTTPS使用
+git clone https://github.com/phalanchang/phalanchang-task-tool-1.git
+```
+
+### 🐳 Docker Composeトラブル
+
+#### サービス状態確認
+```bash
+# 全サービス状態確認
 docker compose ps
 
 # ログ確認
 docker compose logs -f [service-name]
 
-# 完全リセット
-docker compose down -v
+# 特定サービスのログ確認
+docker compose logs frontend
+docker compose logs backend  
+docker compose logs database
+```
+
+#### データベース接続エラー
+```bash
+# データベースパスワード確認
+cat .env | grep PASSWORD
+
+# データベース接続テスト
+docker compose exec database mysql -u root -prootpass task_management_app
+
+# マイグレーション再実行
+docker compose exec database mysql -u root -prootpass task_management_app -e "
+SHOW COLUMNS FROM tasks LIKE 'display_order';"
+```
+
+#### 完全リセット
+```bash
+# 完全クリーンアップ
+docker compose down -v --remove-orphans
+docker system prune -f
+docker volume prune -f
+
+# 再起動
 docker compose up -d
 ```
 

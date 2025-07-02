@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import './TaskForm.css';
 
 interface TaskFormData {
   title: string;
@@ -43,41 +44,61 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form data-testid="task-form" onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="title">タイトル</label>
+    <form className="task-form" data-testid="task-form" onSubmit={handleSubmit}>
+      <div className="task-form__header">
+        <h3 className="task-form__title">
+          ✨ 新しいタスクを追加
+        </h3>
+        <p className="task-form__subtitle">タスクの詳細を入力してください</p>
+      </div>
+      
+      <div className="task-form__field">
+        <label className="task-form__label" htmlFor="title">
+          📝 タイトル *
+        </label>
         <input
+          className="task-form__input"
           id="title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="タスクのタイトルを入力してください"
           required
         />
       </div>
       
-      <div>
-        <label htmlFor="description">説明</label>
+      <div className="task-form__field">
+        <label className="task-form__label" htmlFor="description">
+          📄 説明
+        </label>
         <textarea
+          className="task-form__textarea"
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          placeholder="タスクの詳細な説明を入力してください（任意）"
         />
       </div>
 
-      <div>
-        <label htmlFor="priority">優先度</label>
+      <div className="task-form__field task-form__priority-select">
+        <label className="task-form__label" htmlFor="priority">
+          🎯 優先度
+        </label>
         <select
+          className="task-form__select"
           id="priority"
           value={priority}
           onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
         >
-          <option value="low">低</option>
-          <option value="medium">中</option>
-          <option value="high">高</option>
+          <option value="low">🟢 低</option>
+          <option value="medium">🟡 中</option>
+          <option value="high">🔴 高</option>
         </select>
       </div>
       
-      <button type="submit">タスクを追加</button>
+      <button className="task-form__button" type="submit">
+        ➕ タスクを追加
+      </button>
     </form>
   );
 };

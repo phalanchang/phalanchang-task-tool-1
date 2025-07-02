@@ -5,7 +5,8 @@
  * Taskモデルを使用してMySQLデータベースとやり取りします。
  */
 
-const Task = require('../models/Task');
+const { Task, UserPoints } = require('../models/Task');
+const RecurringTask = require('../models/RecurringTask');
 
 /**
  * すべてのタスクを取得する
@@ -168,10 +169,23 @@ const updateTask = async (req, res) => {
       });
     }
     
-    // 更新されたタスクを返す
+    // タスクが完了に変更された場合はポイントを加算
+    let pointsUpdate = null;
+    if (status === 'completed') {
+      try {
+        pointsUpdate = await UserPoints.addPointsForTaskCompletion(id);
+        console.log('ポイント加算完了:', pointsUpdate);
+      } catch (pointsError) {
+        // ポイント加算エラーはログに記録するがタスク更新は成功とする
+        console.error('ポイント加算エラー:', pointsError);
+      }
+    }
+    
+    // 更新されたタスクを返す（ポイント情報も含める）
     res.status(200).json({
       success: true,
-      data: updatedTask
+      data: updatedTask,
+      points: pointsUpdate
     });
   } catch (error) {
     // エラー詳細をログ出力
@@ -296,16 +310,16 @@ const getDailyTasks = async (req, res) => {
  */
 const createRecurringTask = async (req, res) => {
   try {
-    const { title, description, priority, recurring_config } = req.body;
+    const { title, description, priority, recurring_config, points } = req.body;
     
     // 毎日タスクのマスタータスクを作成
-    const newRecurringTask = await Task.createRecurring({
+    const newRecurringTask = await RecurringTask.create({
       title,
       description,
       priority,
-      is_recurring: true,
       recurring_pattern: 'daily',
-      recurring_config
+      recurring_config,
+      points: points || 0
     });
     
     res.status(201).json({
@@ -387,7 +401,9 @@ const generateTodayTasks = async (req, res) => {
  */
 const getRecurringTasks = async (req, res) => {
   try {
-    const recurringTasks = await Task.findRecurring();
+    console.log('RecurringTask.findAll() 呼び出し開始');
+    const recurringTasks = await RecurringTask.findAll();
+    console.log('RecurringTask.findAll() 結果:', recurringTasks);
     
     res.status(200).json({
       success: true,
@@ -418,9 +434,12 @@ const updateRecurringTask = async (req, res) => {
   
   try {
     console.log('PUT /api/tasks/recurring/' + id + ' - Received data:', req.body);
+    console.log('PUT /api/tasks/recurring/' + id + ' - Request body keys:', Object.keys(req.body));
     
     // リクエストボディから更新データを取得
-    const { title, description, priority, recurring_config } = req.body;
+    const { title, description, priority, recurring_config, points } = req.body;
+    
+    console.log('Points value:', points, 'Type:', typeof points);
     
     // 入力バリデーション
     if (!title || !title.trim()) {
@@ -435,6 +454,17 @@ const updateRecurringTask = async (req, res) => {
         success: false,
         error: 'Recurring configuration with time is required'
       });
+    }
+    
+    // ポイントのバリデーション
+    if (points !== undefined) {
+      const pointsValue = parseInt(points);
+      if (isNaN(pointsValue) || pointsValue < 0 || pointsValue > 1000) {
+        return res.status(400).json({
+          success: false,
+          error: 'Points must be between 0 and 1000'
+        });
+      }
     }
     
     // 時刻形式のバリデーション
@@ -454,7 +484,13 @@ const updateRecurringTask = async (req, res) => {
       recurring_config: JSON.stringify(recurring_config)
     };
     
-    const updatedTask = await Task.update(id, updateData);
+    // ポイントが指定されている場合のみ追加
+    if (points !== undefined) {
+      updateData.points = parseInt(points);
+      console.log('Adding points to updateData:', updateData.points);
+    }
+    
+    const updatedTask = await RecurringTask.update(id, updateData);
     
     if (!updatedTask) {
       return res.status(404).json({
@@ -507,8 +543,8 @@ const deleteRecurringTask = async (req, res) => {
     // URLパラメータからIDを取得
     const id = req.params.id;
     
-    // Taskモデルを使用して繰り返しタスクを削除
-    const deletedTask = await Task.deleteRecurringTask(id);
+    // RecurringTaskモデルを使用して繰り返しタスクを削除
+    const deletedTask = await RecurringTask.delete(id);
     
     // タスクが見つからない場合
     if (!deletedTask) {
@@ -544,6 +580,71 @@ const deleteRecurringTask = async (req, res) => {
   }
 };
 
+/**
+ * ユーザーのポイント情報を取得する
+ * 
+ * API: GET /api/tasks/points
+ * 目的: 現在のユーザーの累計ポイントと本日のポイントを取得
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const getUserPoints = async (req, res) => {
+  try {
+    const userId = req.query.userId || 'default_user';
+    const points = await UserPoints.getUserPoints(userId);
+    
+    res.status(200).json({
+      success: true,
+      data: points
+    });
+  } catch (error) {
+    console.error('ポイント取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get points',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * ポイントを手動で加算する（管理者用）
+ * 
+ * API: POST /api/tasks/points
+ * 目的: 指定されたポイントを手動で加算
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const addPoints = async (req, res) => {
+  try {
+    const { points, userId = 'default_user' } = req.body;
+    
+    if (!points || points <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: 'ポイントは正の数である必要があります'
+      });
+    }
+    
+    const updatedPoints = await UserPoints.addPoints(points, userId);
+    
+    res.status(200).json({
+      success: true,
+      data: updatedPoints
+    });
+  } catch (error) {
+    console.error('ポイント加算エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add points',
+      message: error.message
+    });
+  }
+};
+
 // 他のファイルから使用できるようにエクスポート
 module.exports = {
   getAllTasks,
@@ -557,5 +658,8 @@ module.exports = {
   generateTodayTasks,
   getRecurringTasks,
   updateRecurringTask,
-  deleteRecurringTask
+  deleteRecurringTask,
+  // ポイント関連の新しいメソッド
+  getUserPoints,
+  addPoints
 };

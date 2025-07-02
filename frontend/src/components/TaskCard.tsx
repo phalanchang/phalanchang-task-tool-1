@@ -38,6 +38,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
     getStatusClass(task.status)
   ].join(' ');
 
+  // デイリータスクの場合は日付を追加したタイトルを表示
+  const getDisplayTitle = () => {
+    const isDaily = task.source_task_id !== undefined && task.source_task_id !== null;
+    
+    if (isDaily && task.scheduled_date) {
+      // scheduled_dateから日付を取得して「 - yyyy.mm.dd」形式で追加
+      const date = new Date(task.scheduled_date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = ` - ${year}.${month}.${day}`;
+      
+      return task.title + dateStr;
+    }
+    
+    return task.title;
+  };
+
   return (
     <div 
       className={cardClassName}
@@ -49,7 +67,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           className="task-card__title"
           data-testid="task-title"
         >
-          {task.title}
+          {getDisplayTitle()}
         </h3>
         
         <div className="task-card__badges">
@@ -62,6 +80,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <span className={`priority-badge priority-badge--${task.priority}`}>
             {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
           </span>
+          
+          {/* ポイント表示 */}
+          {task.points && task.points > 0 && (
+            <span className="points-badge">
+              💎 {task.points}
+            </span>
+          )}
         </div>
       </div>
 

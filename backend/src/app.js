@@ -32,6 +32,7 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/points', require('./routes/points'));
 
 app.use((req, res) => {
   res.status(404).json({

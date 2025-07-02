@@ -27,6 +27,8 @@ export interface Task {
   recurring_config?: RecurringConfig;
   source_task_id?: number;
   scheduled_date?: string;
+  display_order?: number;
+  points?: number;  // ポイント機能追加
 }
 
 // 繰り返しタスクの型定義
@@ -41,6 +43,7 @@ export interface CreateTaskData {
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
+  points?: number;  // ポイント機能追加
 }
 
 // 繰り返しタスク作成用の型定義
@@ -48,6 +51,8 @@ export interface CreateRecurringTaskData extends CreateTaskData {
   is_recurring: true;
   recurring_pattern: 'daily' | 'weekly' | 'monthly';
   recurring_config: RecurringConfig;
+  display_order?: number;
+  points?: number;  // ポイント機能追加
 }
 
 // フォームデータの型定義
@@ -56,6 +61,8 @@ export interface RecurringTaskFormData {
   description: string;
   priority: 'low' | 'medium' | 'high';
   time: string;
+  display_order?: number;
+  points?: number;  // ポイント機能追加
 }
 
 interface TaskListProps {

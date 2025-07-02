@@ -27,7 +27,13 @@
       "Bash(systemctl status:*)",
       "Bash(docker compose:*)",
       "Bash(groups $USER)",
-      "Bash(sudo usermod:*)"
+      "Bash(sudo usermod:*)",
+      "Bash(git merge:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker logs:*)",
+      "Bash(npm ls:*)",
+      "Bash(mysql:*)",
+      "Bash(docker exec:*)"
     ],
     "deny": []
   }

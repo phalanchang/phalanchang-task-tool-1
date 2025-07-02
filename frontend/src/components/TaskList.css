@@ -13,9 +13,24 @@
 /* グリッドレイアウト */
 .task-list__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
   margin-top: 16px;
+}
+
+/* デスクトップでより多くのカードを横並びに */
+@media (min-width: 1024px) {
+  .task-list__grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .task-list__grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+  }
 }
 
 /* 空の状態 */

@@ -63,8 +63,8 @@
 
 /* ステータス別のスタイル */
 .task-card--completed {
-  opacity: 0.85;
-  background: #e8e8e8;
+  opacity: 0.9;
+  background: #d0d0d0; /* より濃いグレーに変更 */
 }
 
 .task-card--pending {
@@ -119,7 +119,8 @@
 }
 
 .status-badge,
-.priority-badge {
+.priority-badge,
+.points-badge {
   display: inline-block;
   padding: 2px var(--spacing-xs);
   border-radius: 8px;
@@ -147,6 +148,15 @@
 
 .priority-badge--low {
   background-color: var(--priority-low);
+}
+
+/* ポイントバッジ */
+.points-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-transform: none;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* アクションボタン */

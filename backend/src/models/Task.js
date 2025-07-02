@@ -35,6 +35,14 @@ class Task {
     if (taskData.priority && !validPriorities.includes(taskData.priority)) {
       throw new Error('優先度は low, medium, high のいずれかである必要があります');
     }
+
+    // ポイントのバリデーション
+    if (taskData.points !== undefined) {
+      const points = parseInt(taskData.points);
+      if (isNaN(points) || points < 0 || points > 1000) {
+        throw new Error('ポイントは0以上1000以下の整数である必要があります');
+      }
+    }
   }
 
   /**
@@ -75,6 +83,11 @@ class Task {
     // 空のdescriptionをnullに変換
     if (sanitized.description === '') {
       sanitized.description = null;
+    }
+
+    // ポイントのサニタイゼーション
+    if (sanitized.points !== undefined) {
+      sanitized.points = parseInt(sanitized.points) || 0;
     }
 
     return sanitized;
@@ -270,6 +283,16 @@ class Task {
         updateValues.push(sanitizedData.priority);
       }
 
+      if (sanitizedData.recurring_config !== undefined) {
+        updateFields.push('recurring_config = ?');
+        updateValues.push(sanitizedData.recurring_config);
+      }
+
+      if (sanitizedData.points !== undefined) {
+        updateFields.push('points = ?');
+        updateValues.push(sanitizedData.points);
+      }
+
       if (updateFields.length === 0) {
         // 更新するフィールドがない場合は現在のデータを返す
         return existingRows[0];
@@ -280,6 +303,9 @@ class Task {
       updateValues.push(parseInt(id));
 
       // 更新実行
+      console.log('SQL更新クエリ:', `UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?`);
+      console.log('SQL更新値:', updateValues);
+      
       await connection.execute(
         `UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?`,
         updateValues
@@ -439,7 +465,7 @@ class Task {
            AND source_task_id IS NOT NULL 
            AND scheduled_date = ?
          ORDER BY 
-           FIELD(priority, 'high', 'medium', 'low'),
+           display_order ASC,
            created_at DESC`,
         [date]
       );
@@ -473,8 +499,8 @@ class Task {
 
       // 繰り返しタスクとして挿入
       const [result] = await connection.execute(
-        `INSERT INTO tasks (title, description, status, priority, is_recurring, recurring_pattern, recurring_config) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO tasks (title, description, status, priority, is_recurring, recurring_pattern, recurring_config, display_order, points) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sanitizedData.title,
           sanitizedData.description,
@@ -482,7 +508,9 @@ class Task {
           sanitizedData.priority,
           sanitizedData.is_recurring,
           sanitizedData.recurring_pattern,
-          JSON.stringify(sanitizedData.recurring_config)
+          JSON.stringify(sanitizedData.recurring_config),
+          sanitizedData.display_order || null,
+          sanitizedData.points || 0
         ]
       );
 
@@ -548,10 +576,10 @@ class Task {
       // トランザクション開始（重複防止のため）
       await connection.query('START TRANSACTION');
 
-      // 毎日タスクのマスタータスクを取得
+      // 毎日タスクのマスタータスクを取得（recurring_tasks テーブルから）
       const [masterTasks] = await connection.execute(
-        `SELECT * FROM tasks 
-         WHERE is_recurring = TRUE 
+        `SELECT * FROM recurring_tasks 
+         WHERE is_active = TRUE 
            AND recurring_pattern = 'daily'`
       );
 
@@ -574,8 +602,8 @@ class Task {
           // 重複がない場合のみ作成
           try {
             await connection.execute(
-              `INSERT INTO tasks (title, description, status, priority, is_recurring, source_task_id, scheduled_date)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO tasks (title, description, status, priority, is_recurring, source_task_id, scheduled_date, display_order, points)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 `${masterTask.title}`,  // 日付を削除してシンプルに
                 masterTask.description,
@@ -583,7 +611,9 @@ class Task {
                 masterTask.priority,
                 false,
                 masterTask.id,
-                date
+                date,
+                masterTask.display_order || null,
+                masterTask.points || 0  // マスタータスクのポイントを継承
               ]
             );
             generatedCount++;
@@ -611,7 +641,7 @@ class Task {
            AND source_task_id IS NOT NULL 
            AND scheduled_date = ?
          ORDER BY 
-           FIELD(priority, 'high', 'medium', 'low'),
+           display_order ASC,
            created_at ASC`,
         [date]
       );
@@ -643,4 +673,145 @@ class Task {
   }
 }
 
-module.exports = Task;
+/**
+ * UserPoints モデル
+ * 
+ * ユーザーのポイント管理を担当
+ */
+class UserPoints {
+  /**
+   * ユーザーの現在のポイント情報を取得
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<Object>} ポイント情報
+   */
+  static async getUserPoints(userId = 'default_user') {
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      const [rows] = await connection.execute(
+        'SELECT * FROM user_points WHERE user_id = ?',
+        [userId]
+      );
+
+      if (rows.length === 0) {
+        // ユーザーが存在しない場合は新規作成
+        await connection.execute(
+          'INSERT INTO user_points (user_id, total_points, daily_points, last_updated) VALUES (?, 0, 0, CURRENT_DATE)',
+          [userId]
+        );
+        return { user_id: userId, total_points: 0, daily_points: 0, last_updated: new Date() };
+      }
+
+      return rows[0];
+
+    } catch (error) {
+      console.error('ユーザーポイント取得エラー:', error);
+      throw new Error(`ポイント情報の取得に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * ポイントを加算
+   * @param {number} points - 加算するポイント
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<Object>} 更新後のポイント情報
+   */
+  static async addPoints(points, userId = 'default_user') {
+    if (!points || points <= 0) {
+      throw new Error('有効なポイント数を指定してください');
+    }
+
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      // 現在の日付
+      const today = new Date().toISOString().slice(0, 10);
+
+      // ユーザーポイント情報を取得または作成
+      const currentPoints = await this.getUserPoints(userId);
+      
+      // 日付が変わっている場合はdaily_pointsをリセット
+      const lastUpdated = new Date(currentPoints.last_updated).toISOString().slice(0, 10);
+      const dailyPoints = (lastUpdated === today) ? currentPoints.daily_points + points : points;
+
+      // ポイントを更新
+      await connection.execute(
+        `UPDATE user_points 
+         SET total_points = total_points + ?, 
+             daily_points = ?, 
+             last_updated = CURRENT_DATE,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = ?`,
+        [points, dailyPoints, userId]
+      );
+
+      // 更新後の情報を取得
+      return await this.getUserPoints(userId);
+
+    } catch (error) {
+      console.error('ポイント加算エラー:', error);
+      throw new Error(`ポイントの加算に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * タスク完了時のポイント加算（Taskモデルから呼び出される）
+   * @param {number} taskId - 完了したタスクID
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<Object>} 更新後のポイント情報
+   */
+  static async addPointsForTaskCompletion(taskId, userId = 'default_user') {
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      // タスクのポイント数を取得（繰り返しタスクの場合は元タスクのポイント）
+      const [taskRows] = await connection.execute(
+        `SELECT 
+           CASE 
+             WHEN source_task_id IS NOT NULL THEN 
+               (SELECT points FROM tasks WHERE id = source_task_id)
+             ELSE points 
+           END as task_points
+         FROM tasks 
+         WHERE id = ? AND status = 'completed'`,
+        [taskId]
+      );
+
+      if (taskRows.length === 0) {
+        throw new Error('完了タスクが見つかりません');
+      }
+
+      const taskPoints = taskRows[0].task_points || 0;
+      
+      if (taskPoints > 0) {
+        return await this.addPoints(taskPoints, userId);
+      }
+
+      return await this.getUserPoints(userId);
+
+    } catch (error) {
+      console.error('タスク完了ポイント加算エラー:', error);
+      throw new Error(`タスク完了時のポイント加算に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+}
+
+module.exports = { Task, UserPoints };

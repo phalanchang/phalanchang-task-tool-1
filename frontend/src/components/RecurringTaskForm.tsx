@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { RecurringTaskFormData, RecurringTask } from './TaskList';
 import { validateInputSecurity, sanitizeInput } from '../utils/security';
+import './RecurringTaskForm.css';
 
 interface RecurringTaskFormProps {
   onSubmit: (data: RecurringTaskFormData) => void;
@@ -38,14 +39,18 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
         title: editingTask.title,
         description: editingTask.description,
         priority: editingTask.priority,
-        time: editingTask.recurring_config?.time || '09:00'
+        time: editingTask.recurring_config?.time || '09:00',
+        display_order: editingTask.display_order || 1,
+        points: editingTask.points || 0
       };
     }
     return {
       title: '',
       description: '',
       priority: 'medium',
-      time: '09:00'
+      time: '09:00',
+      display_order: 1,
+      points: 0
     };
   }, [mode, editingTask]);
 
@@ -100,6 +105,20 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
       }
     }
 
+    // 表示順番バリデーション
+    if (formData.display_order !== undefined) {
+      if (formData.display_order < 1 || formData.display_order > 999) {
+        newErrors.display_order = '表示順番は1から999の間で入力してください';
+      }
+    }
+
+    // ポイントバリデーション
+    if (formData.points !== undefined) {
+      if (formData.points < 0 || formData.points > 1000) {
+        newErrors.points = 'ポイントは0から1000の間で入力してください';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -117,6 +136,11 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
         title: sanitizeInput(formData.title),
         description: sanitizeInput(formData.description)
       };
+      
+      // デバッグログ: フォーム送信時のデータ確認
+      console.log('RecurringTaskForm - handleSubmit:', sanitizedData);
+      console.log('RecurringTaskForm - ポイント値:', sanitizedData.points, 'タイプ:', typeof sanitizedData.points);
+      
       onSubmit(sanitizedData);
     }
   };
@@ -124,7 +148,7 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
   /**
    * 入力値変更処理 - useCallbackでパフォーマンス最適化
    */
-  const handleInputChange = useCallback((field: keyof RecurringTaskFormData, value: string) => {
+  const handleInputChange = useCallback((field: keyof RecurringTaskFormData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -179,121 +203,182 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
             : '毎日実行する新しいタスクを作成します。設定した時刻に実行予定のタスクが自動生成されます。'}
         </p>
 
-        {/* タスク名 */}
-        <div className="form-group">
-          <label htmlFor="task-title" className="form-label">
-            📝 タスク名 <span className="required">*</span>
-          </label>
-          <input
-            id="task-title"
-            type="text"
-            className={`form-input ${errors.title ? 'error' : ''}`}
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            placeholder="例: 朝の運動、メール確認、日報作成"
-            maxLength={255}
-            disabled={loading}
-            aria-required="true"
-            aria-invalid={!!errors.title}
-            aria-describedby={errors.title ? "title-error" : "title-help"}
-            autoFocus
-          />
-          {errors.title && (
-            <div id="title-error" className="error-text" role="alert">
-              {errors.title}
+        <div className="form-grid">
+          {/* タスク名 */}
+          <div className="form-group form-group--full-width">
+            <label htmlFor="task-title" className="form-label">
+              📝 タスク名 <span className="required">*</span>
+            </label>
+            <input
+              id="task-title"
+              type="text"
+              className={`form-input ${errors.title ? 'error' : ''}`}
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              placeholder="例: 朝の運動、メール確認、日報作成"
+              maxLength={255}
+              disabled={loading}
+              aria-required="true"
+              aria-invalid={!!errors.title}
+              aria-describedby={errors.title ? "title-error" : "title-help"}
+              autoFocus
+            />
+            {errors.title && (
+              <div id="title-error" className="error-text" role="alert">
+                {errors.title}
+              </div>
+            )}
+            <div id="title-help" className="help-text">
+              毎日繰り返すタスクの名前を入力してください
             </div>
-          )}
-          <div id="title-help" className="help-text">
-            毎日繰り返すタスクの名前を入力してください
           </div>
-        </div>
 
-        {/* 説明 */}
-        <div className="form-group">
-          <label htmlFor="task-description" className="form-label">
-            📄 説明
-          </label>
-          <textarea
-            id="task-description"
-            className={`form-textarea ${errors.description ? 'error' : ''}`}
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            placeholder="タスクの詳細説明（オプション）"
-            rows={3}
-            maxLength={1000}
-            disabled={loading}
-            aria-invalid={!!errors.description}
-            aria-describedby={errors.description ? "description-error" : "description-help"}
-          />
-          {errors.description && (
-            <div id="description-error" className="error-text" role="alert">
-              {errors.description}
+          {/* 説明 */}
+          <div className="form-group form-group--full-width">
+            <label htmlFor="task-description" className="form-label">
+              📄 説明
+            </label>
+            <textarea
+              id="task-description"
+              className={`form-textarea ${errors.description ? 'error' : ''}`}
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="タスクの詳細説明（オプション）"
+              rows={3}
+              maxLength={1000}
+              disabled={loading}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? "description-error" : "description-help"}
+            />
+            {errors.description && (
+              <div id="description-error" className="error-text" role="alert">
+                {errors.description}
+              </div>
+            )}
+            <div id="description-help" className="help-text">
+              タスクの詳細や注意事項を記載できます（任意）
             </div>
-          )}
-          <div id="description-help" className="help-text">
-            タスクの詳細や注意事項を記載できます（任意）
+            <div className="char-count">
+              {formData.description.length}/1000
+            </div>
           </div>
-          <div className="char-count">
-            {formData.description.length}/1000
-          </div>
-        </div>
 
-        {/* 優先度 */}
-        <div className="form-group">
-          <label className="form-label">⭐ 優先度</label>
-          <fieldset className="priority-fieldset">
-            <legend className="priority-legend">優先度を選択してください</legend>
-            <div className="priority-options" role="radiogroup" aria-labelledby="priority-legend">
-              {(['high', 'medium', 'low'] as const).map(priority => (
-                <label key={priority} className="priority-option">
-                  <input
-                    type="radio"
-                    name="priority"
-                    value={priority}
-                    checked={formData.priority === priority}
-                    onChange={(e) => handleInputChange('priority', e.target.value)}
-                    disabled={loading}
-                    aria-describedby="priority-help"
-                  />
-                  <span className="priority-label">
-                    {getPriorityLabel(priority)}
-                  </span>
-                </label>
+          {/* 優先度 */}
+          <div className="form-group">
+            <label className="form-label">⭐ 優先度</label>
+            <fieldset className="priority-fieldset">
+              <legend className="priority-legend">優先度を選択してください</legend>
+              <div className="priority-options" role="radiogroup" aria-labelledby="priority-legend">
+                {(['high', 'medium', 'low'] as const).map(priority => (
+                  <label key={priority} className="priority-option">
+                    <input
+                      type="radio"
+                      name="priority"
+                      value={priority}
+                      checked={formData.priority === priority}
+                      onChange={(e) => handleInputChange('priority', e.target.value)}
+                      disabled={loading}
+                      aria-describedby="priority-help"
+                    />
+                    <span className="priority-label">
+                      {getPriorityLabel(priority)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <div id="priority-help" className="help-text">
+                タスクの重要度を設定します
+              </div>
+            </fieldset>
+          </div>
+
+          {/* 実行時刻 */}
+          <div className="form-group">
+            <label htmlFor="task-time" className="form-label">
+              🕐 実行時刻
+            </label>
+            <select
+              id="task-time"
+              className={`form-select ${errors.time ? 'error' : ''}`}
+              value={formData.time}
+              onChange={(e) => handleInputChange('time', e.target.value)}
+              disabled={loading}
+              aria-invalid={!!errors.time}
+              aria-describedby={errors.time ? "time-error" : "time-help"}
+            >
+              {generateTimeOptions.map(time => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
               ))}
+            </select>
+            {errors.time && (
+              <div id="time-error" className="error-text" role="alert">
+                {errors.time}
+              </div>
+            )}
+            <div id="time-help" className="help-text">
+              設定した時刻に毎日のタスクが自動生成されます
             </div>
-            <div id="priority-help" className="help-text">
-              タスクの重要度を設定します
-            </div>
-          </fieldset>
-        </div>
+          </div>
 
-        {/* 実行時刻 */}
-        <div className="form-group">
-          <label htmlFor="task-time" className="form-label">
-            🕐 実行時刻
-          </label>
-          <select
-            id="task-time"
-            className={`form-select ${errors.time ? 'error' : ''}`}
-            value={formData.time}
-            onChange={(e) => handleInputChange('time', e.target.value)}
-            disabled={loading}
-            aria-invalid={!!errors.time}
-            aria-describedby={errors.time ? "time-error" : "time-help"}
-          >
-            {generateTimeOptions.map(time => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
-          </select>
-          {errors.time && (
-            <div id="time-error" className="error-text" role="alert">
-              {errors.time}
+          {/* 表示順番 */}
+          <div className="form-group">
+            <label htmlFor="task-display-order" className="form-label">
+              🔢 表示順番
+            </label>
+            <input
+              id="task-display-order"
+              type="number"
+              min="1"
+              max="999"
+              className={`form-input ${errors.display_order ? 'error' : ''}`}
+              value={formData.display_order || 1}
+              onChange={(e) => handleInputChange('display_order', parseInt(e.target.value) || 1)}
+              disabled={loading}
+              aria-invalid={!!errors.display_order}
+              aria-describedby={errors.display_order ? "display-order-error" : "display-order-help"}
+            />
+            {errors.display_order && (
+              <div id="display-order-error" className="error-text" role="alert">
+                {errors.display_order}
+              </div>
+            )}
+            <div id="display-order-help" className="help-text">
+              デイリータスク画面での表示順番（1から999まで。小さい数字が上に表示されます）
             </div>
-          )}
-          <div id="time-help" className="help-text">
-            設定した時刻に毎日のタスクが自動生成されます
+          </div>
+
+          {/* ポイント */}
+          <div className="form-group">
+            <label htmlFor="task-points" className="form-label">
+              💎 ポイント
+            </label>
+            <input
+              id="task-points"
+              type="number"
+              min="0"
+              max="1000"
+              className={`form-input ${errors.points ? 'error' : ''}`}
+              value={formData.points || 0}
+              onChange={(e) => {
+                const value = e.target.value;
+                const numValue = value === '' ? 0 : parseInt(value);
+                console.log('ポイント入力値変更:', value, '->', numValue);
+                handleInputChange('points', numValue);
+              }}
+              disabled={loading}
+              aria-invalid={!!errors.points}
+              aria-describedby={errors.points ? "points-error" : "points-help"}
+            />
+            {errors.points && (
+              <div id="points-error" className="error-text" role="alert">
+                {errors.points}
+              </div>
+            )}
+            <div id="points-help" className="help-text">
+              タスク完了時に獲得できるポイント（0から1000まで。時間・難易度・重要度を考慮して設定）
+            </div>
           </div>
         </div>
 
@@ -309,6 +394,12 @@ const RecurringTaskForm: React.FC<RecurringTaskFormProps> = ({
             </div>
             <div className="preview-priority">
               {getPriorityLabel(formData.priority)}
+            </div>
+            <div className="preview-points">
+              💎 {formData.points || 0} ポイント
+            </div>
+            <div className="preview-display-order">
+              🔢 表示順番: {formData.display_order || 1}
             </div>
             {formData.description && (
               <div className="preview-description">

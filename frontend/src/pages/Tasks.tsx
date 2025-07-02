@@ -182,9 +182,9 @@ const Tasks: React.FC = () => {
     
     // 表示順番でソート（display_orderがある場合はそれを使用、ない場合はidを使用）
     return filteredTasks.sort((a, b) => {
-      const orderA = ('display_order' in a && a.display_order !== undefined) ? a.display_order : a.id;
-      const orderB = ('display_order' in b && b.display_order !== undefined) ? b.display_order : b.id;
-      return orderA - orderB;
+      const orderA = ('display_order' in a && a.display_order !== undefined && a.display_order !== null) ? a.display_order : a.id;
+      const orderB = ('display_order' in b && b.display_order !== undefined && b.display_order !== null) ? b.display_order : b.id;
+      return (orderA || 0) - (orderB || 0);
     });
   };
 

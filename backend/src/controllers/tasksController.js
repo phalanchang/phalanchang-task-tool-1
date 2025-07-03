@@ -153,6 +153,16 @@ const updateTask = async (req, res) => {
       priority
     });
     
+    // 更新前のタスク状態を取得
+    const originalTask = await Task.findById(id);
+    if (!originalTask) {
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found'
+      });
+    }
+    
+    
     // Taskモデルを使用してタスクを更新
     const updatedTask = await Task.update(id, {
       title,
@@ -169,12 +179,11 @@ const updateTask = async (req, res) => {
       });
     }
     
-    // タスクが完了に変更された場合はポイントを加算
+    // タスクが pending → completed に変更された場合のみポイントを加算
     let pointsUpdate = null;
-    if (status === 'completed') {
+    if (originalTask.status === 'pending' && status === 'completed') {
       try {
         pointsUpdate = await UserPoints.addPointsForTaskCompletion(id);
-        console.log('ポイント加算完了:', pointsUpdate);
       } catch (pointsError) {
         // ポイント加算エラーはログに記録するがタスク更新は成功とする
         console.error('ポイント加算エラー:', pointsError);

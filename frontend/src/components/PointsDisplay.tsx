@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDailyTaskRefresh } from '../contexts/DailyTaskContext';
 import './PointsDisplay.css';
 
 interface UserPoints {
@@ -16,24 +17,16 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
   const [points, setPoints] = useState<UserPoints | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  // リアルタイム更新用
+  const { refreshTrigger } = useDailyTaskRefresh();
 
   const fetchPoints = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // 一時的にハードコーディングされたポイント（バックエンドAPI問題回避）
-      const mockPoints: UserPoints = {
-        user_id: 'default_user',
-        total_points: 125,
-        daily_points: 15,
-        last_updated: new Date().toISOString().slice(0, 10)
-      };
-      
-      setPoints(mockPoints);
-      setLoading(false);
-      
-      /* APIが動作する場合のコード
       const response = await fetch('http://localhost:3001/api/tasks/user-points');
       
       if (!response.ok) {
@@ -42,11 +35,15 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
       
       const data = await response.json();
       if (data.success) {
+        // アニメーション効果
+        if (points && data.data.total_points > points.total_points) {
+          setIsAnimating(true);
+          setTimeout(() => setIsAnimating(false), 1000);
+        }
         setPoints(data.data);
       } else {
         throw new Error(data.message || 'Failed to fetch points');
       }
-      */
     } catch (err) {
       console.error('ポイント取得エラー:', err);
       setError('ポイントの取得に失敗しました');
@@ -57,7 +54,7 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
 
   useEffect(() => {
     fetchPoints();
-  }, []);
+  }, [refreshTrigger]);
 
   if (loading) {
     return (
@@ -86,7 +83,7 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
   }
 
   return (
-    <div className={`points-display ${className || ''}`}>
+    <div className={`points-display ${className || ''} ${isAnimating ? 'animate' : ''}`}>
       <div className="points-container">
         <div className="total-points">
           <span className="points-icon">🏆</span>

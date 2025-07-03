@@ -783,7 +783,7 @@ class UserPoints {
         `SELECT 
            CASE 
              WHEN source_task_id IS NOT NULL THEN 
-               (SELECT points FROM tasks WHERE id = source_task_id)
+               (SELECT points FROM recurring_tasks WHERE id = source_task_id)
              ELSE points 
            END as task_points
          FROM tasks 

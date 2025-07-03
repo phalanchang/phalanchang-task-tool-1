@@ -83,7 +83,41 @@
   font-size: 1rem;
 }
 
+/* ポイント増加アニメーション */
+.points-display.animate .points-container {
+  animation: pointsIncrease 1s ease-in-out;
+}
+
+.points-display.animate .points-value {
+  animation: pointsGlow 1s ease-in-out;
+}
+
 /* アニメーション */
+@keyframes pointsIncrease {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pointsGlow {
+  0% {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+
 @keyframes sparkle {
   0%, 100% {
     transform: scale(1);

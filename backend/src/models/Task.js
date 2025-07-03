@@ -733,25 +733,35 @@ class UserPoints {
       connection = await createConnection();
       await connection.query('USE task_management_app');
 
-      // 現在の日付
+      // 現在の日付（YYYY-MM-DD形式）
       const today = new Date().toISOString().slice(0, 10);
 
-      // ユーザーポイント情報を取得または作成
-      const currentPoints = await this.getUserPoints(userId);
+      // point_historyから今日の累計ポイントを計算（より正確）
+      const [dailyTotalRows] = await connection.execute(
+        `SELECT COALESCE(SUM(points_earned), 0) as daily_total
+         FROM point_history 
+         WHERE user_id = ? 
+           AND DATE(created_at) = ?
+           AND action_type = 'task_completion'`,
+        [userId, today]
+      );
       
-      // 日付が変わっている場合はdaily_pointsをリセット
-      const lastUpdated = new Date(currentPoints.last_updated).toISOString().slice(0, 10);
-      const dailyPoints = (lastUpdated === today) ? currentPoints.daily_points + points : points;
+      const currentDailyTotal = parseInt(dailyTotalRows[0].daily_total) || 0;
+      const newDailyTotal = currentDailyTotal + points;
+
+
+      // ユーザーポイント情報を取得または作成（total_pointsのため）
+      const currentPoints = await this.getUserPoints(userId);
 
       // ポイントを更新
       await connection.execute(
         `UPDATE user_points 
          SET total_points = total_points + ?, 
              daily_points = ?, 
-             last_updated = CURRENT_DATE,
+             last_updated = ?,
              updated_at = CURRENT_TIMESTAMP
          WHERE user_id = ?`,
-        [points, dailyPoints, userId]
+        [points, newDailyTotal, today, userId]
       );
 
       // 更新後の情報を取得
@@ -768,27 +778,67 @@ class UserPoints {
   }
 
   /**
+   * タスク完了履歴をチェック（重複ポイント加算防止）
+   * @param {number} taskId - チェック対象のタスクID
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<boolean>} 既に加算済みの場合true
+   */
+  static async hasTaskCompletionHistory(taskId, userId = 'default_user') {
+    let connection;
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+
+      const [rows] = await connection.execute(
+        `SELECT id FROM point_history 
+         WHERE task_id = ? AND user_id = ? AND action_type = 'task_completion'
+         LIMIT 1`,
+        [taskId, userId]
+      );
+
+      return rows.length > 0;
+    } catch (error) {
+      console.error('ポイント履歴チェックエラー:', error);
+      // エラー時は安全側に倒してtrueを返す（重複加算を防止）
+      return true;
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
    * タスク完了時のポイント加算（Taskモデルから呼び出される）
    * @param {number} taskId - 完了したタスクID
    * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
    * @returns {Promise<Object>} 更新後のポイント情報
    */
   static async addPointsForTaskCompletion(taskId, userId = 'default_user') {
+    // 1. 既にポイントが加算されているかチェック
+    const hasHistory = await this.hasTaskCompletionHistory(taskId, userId);
+    
+    if (hasHistory) {
+      console.log(`Task ${taskId} already has point allocation history. Skipping duplicate allocation.`);
+      return await this.getUserPoints(userId);
+    }
+
     let connection;
     try {
       connection = await createConnection();
       await connection.query('USE task_management_app');
 
-      // タスクのポイント数を取得（繰り返しタスクの場合は元タスクのポイント）
+      // タスクの詳細情報とポイント数を取得
       const [taskRows] = await connection.execute(
         `SELECT 
+           t.title,
            CASE 
-             WHEN source_task_id IS NOT NULL THEN 
-               (SELECT points FROM recurring_tasks WHERE id = source_task_id)
-             ELSE points 
+             WHEN t.source_task_id IS NOT NULL THEN 
+               (SELECT points FROM recurring_tasks WHERE id = t.source_task_id)
+             ELSE t.points 
            END as task_points
-         FROM tasks 
-         WHERE id = ? AND status = 'completed'`,
+         FROM tasks t
+         WHERE t.id = ? AND t.status = 'completed'`,
         [taskId]
       );
 
@@ -797,9 +847,21 @@ class UserPoints {
       }
 
       const taskPoints = taskRows[0].task_points || 0;
+      const taskTitle = taskRows[0].title;
       
       if (taskPoints > 0) {
-        return await this.addPoints(taskPoints, userId);
+        // 2. ポイント加算処理
+        const updatedPoints = await this.addPoints(taskPoints, userId);
+        
+        // 3. ポイント履歴に記録
+        await connection.execute(
+          `INSERT INTO point_history (user_id, task_id, points_earned, task_title, action_type, created_at)
+           VALUES (?, ?, ?, ?, 'task_completion', CURRENT_TIMESTAMP)`,
+          [userId, taskId, taskPoints, taskTitle]
+        );
+        
+        console.log(`Task completion points added: Task ${taskId} (${taskTitle}) - ${taskPoints} points for user ${userId}`);
+        return updatedPoints;
       }
 
       return await this.getUserPoints(userId);

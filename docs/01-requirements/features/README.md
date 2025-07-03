@@ -13,7 +13,9 @@
 | REPEAT-001 | 繰り返しタスクの管理 | ✅ 完了 | - | - |
 | SIDEBAR-001 | サイドバー機能 | ✅ 完了 | - | - |
 | POINT-001 | タスク完了時ポイント加算機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
-| POINT-002 | 通常タスクのポイント機能拡張 | 🚧 進行中 | 2025-07-03 | Claude Code Assistant |
+| POINT-002 | 通常タスクのポイント機能拡張 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
+| POINT-003 | 重複ポイント加算防止機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
+| POINT-004 | ポイント表示・反映不具合修正 | 🚧 進行中 | 2025-07-03 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -62,13 +64,31 @@
 
 ### POINT-002: 通常タスクのポイント機能拡張
 - **概要**: 通常タスクでもポイント設定・編集・加算機能を利用可能にする
-- **ステータス**: 🚧 進行中（2025-07-03開始）
+- **ステータス**: ✅ 完了（2025-07-03実装）
 - **実装内容**:
   - TaskFormでのポイント入力フィールド追加
   - バックエンドでのタスク作成・編集時のポイント保存処理
   - 通常タスク完了時のポイント加算機能
   - TaskCardでのポイント表示改善
 - **ファイル**: `POINT-002_regular-tasks-point-enhancement.md`
+
+### POINT-003: 重複ポイント加算防止機能
+- **概要**: 一度完了したタスクを再度完了してもポイントが重複加算されないようにする
+- **ステータス**: ✅ 完了（2025-07-03実装）
+- **実装内容**:
+  - point_historyテーブルを使った重複チェック機能
+  - タスク完了時の重複ポイント加算防止ロジック
+  - 既存ポイント加算機能の改善
+- **ファイル**: `POINT-003_prevent-duplicate-point-allocation.md`
+
+### POINT-004: ポイント表示・反映不具合修正
+- **概要**: ヘッダーのポイント表示とすべてのタスク完了時のポイント反映に関する不具合修正
+- **ステータス**: 🚧 進行中（2025-07-03開始）
+- **実装内容**:
+  - ヘッダーの「今日」ポイント表示を累計値に修正
+  - 「すべてのタスク」完了時のポイント反映機能修正
+  - ポイント計算ロジックの改善
+- **ファイル**: `POINT-004_fix-point-display-issues.md`
 
 ---
 
@@ -81,6 +101,8 @@ docs/01-requirements/features/
 ├── BADGE-002_notification-badge-restoration.md # バッジ復旧対応
 ├── POINT-001_task-completion-point-system.md   # ポイント加算機能
 ├── POINT-002_regular-tasks-point-enhancement.md # 通常タスクポイント機能
+├── POINT-003_prevent-duplicate-point-allocation.md # 重複ポイント加算防止機能
+├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
 ├── COMPOSE-001.md                               # Docker Compose改善
 ├── DOCKER-001.md                                # Docker環境構築
 ├── DOCKER-002.md                                # Docker環境改善
@@ -93,6 +115,8 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
-- 2025-07-03: マスターファイル作成、POINT-001追加
+- 2025-07-03: POINT-004追加、POINT-003完了ステータス更新
+- 2025-07-03: POINT-003追加、POINT-002完了ステータス更新
+- 2025-07-03: マスターファイル作成、POINT-001追加、POINT-002追加
 - 2025-07-03: BADGE-002追加
 - 2025-07-02: BADGE-001追加

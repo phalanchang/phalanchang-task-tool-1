@@ -96,10 +96,10 @@ const Tasks: React.FC = () => {
         // デイリータスクの場合のみ再取得（生成は行わない）
         const fetchedDailyTasks = await taskAPI.getDailyTasks();
         setDailyTasks(fetchedDailyTasks);
-        
-        // バッジをリアルタイム更新
-        triggerRefresh();
       }
+      
+      // ポイント表示をリアルタイム更新（デイリー・通常タスク両方対応）
+      triggerRefresh();
     } catch (err) {
       console.error('タスク更新エラー:', err);
       setError('エラーが発生しました。タスクの更新に失敗しました。');
@@ -122,10 +122,10 @@ const Tasks: React.FC = () => {
         // デイリータスクの場合のみ再取得（生成は行わない）
         const fetchedDailyTasks = await taskAPI.getDailyTasks();
         setDailyTasks(fetchedDailyTasks);
-        
-        // バッジをリアルタイム更新
-        triggerRefresh();
       }
+      
+      // ポイント表示をリアルタイム更新（デイリー・通常タスク両方対応）
+      triggerRefresh();
     } catch (err) {
       console.error('タスク編集エラー:', err);
       setError('エラーが発生しました。タスクの編集に失敗しました。');

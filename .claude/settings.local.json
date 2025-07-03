@@ -33,7 +33,10 @@
       "Bash(docker logs:*)",
       "Bash(npm ls:*)",
       "Bash(mysql:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker restart:*)",
+      "Bash(docker cp:*)"
     ],
     "deny": []
   }

@@ -7,6 +7,8 @@
 
 const { Task, UserPoints } = require('../models/Task');
 const RecurringTask = require('../models/RecurringTask');
+const { getJSTDate, getJSTDateTime, getTimeDebugInfo } = require('../utils/timezone');
+const DailyTaskScheduler = require('../scheduler');
 
 /**
  * すべてのタスクを取得する
@@ -289,17 +291,19 @@ const deleteTask = async (req, res) => {
  */
 const getDailyTasks = async (req, res) => {
   try {
-    // 今日の日付を取得
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+    // 日本時間での今日の日付を取得
+    const todayJST = getJSTDate();
+    console.log('getDailyTasks - JST対象日:', todayJST);
     
     // 今日のデイリータスクを取得
-    const dailyTasks = await Task.findDailyTasks(today);
+    const dailyTasks = await Task.findDailyTasks(todayJST);
     
     res.status(200).json({
       success: true,
       data: dailyTasks,
       count: dailyTasks.length,
-      date: today
+      date: todayJST,
+      jstDateTime: getJSTDateTime()
     });
   } catch (error) {
     console.error('デイリータスク取得エラー:', error);
@@ -367,23 +371,34 @@ const createRecurringTask = async (req, res) => {
  */
 const generateTodayTasks = async (req, res) => {
   try {
-    console.log('generateTodayTasks開始');
-    const today = new Date().toISOString().split('T')[0];
-    console.log('対象日:', today);
+    console.log('generateTodayTasks開始 - 日本時間対応版');
     
-    // 今日分のタスク生成処理
-    console.log('Task.generateTasksForDate呼び出し開始');
-    const result = await Task.generateTasksForDate(today);
+    // 日本時間での今日の日付を取得
+    const todayJST = getJSTDate();
+    const currentTimeJST = getJSTDateTime();
+    
+    console.log('JST対象日:', todayJST);
+    console.log('JST現在時刻:', currentTimeJST);
+    
+    // デバッグ用：時刻情報の詳細ログ
+    const timeDebug = getTimeDebugInfo();
+    console.log('時刻情報詳細:', timeDebug);
+    
+    // 今日分のタスク生成処理（日本時間基準）
+    console.log('Task.generateTasksForDate呼び出し開始 (JST基準)');
+    const result = await Task.generateTasksForDate(todayJST);
     console.log('Task.generateTasksForDate完了:', result);
     
     res.status(200).json({
       success: true,
-      message: `Generated ${result.generated} new daily tasks for ${today}`,
+      message: `Generated ${result.generated} new daily tasks for ${todayJST} (JST)`,
       data: {
-        date: today,
+        date: todayJST,
+        jstDateTime: currentTimeJST,
         generated: result.generated,
         existing: result.existing,
-        tasks: result.tasks
+        tasks: result.tasks,
+        timeDebug: timeDebug
       }
     });
   } catch (error) {
@@ -657,6 +672,64 @@ const addPoints = async (req, res) => {
   }
 };
 
+/**
+ * デイリータスクスケジューラーの状態を取得する
+ * 
+ * API: GET /api/tasks/scheduler/status
+ * 目的: スケジューラーの現在の状態を確認
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const getSchedulerStatus = async (req, res) => {
+  try {
+    const status = DailyTaskScheduler.getStatus();
+    
+    res.status(200).json({
+      success: true,
+      data: status,
+      message: status.isRunning ? 'スケジューラーは正常に動作中です' : 'スケジューラーは停止中です'
+    });
+  } catch (error) {
+    console.error('スケジューラー状態取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get scheduler status',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * デイリータスクスケジューラーを手動実行する（テスト用）
+ * 
+ * API: POST /api/tasks/scheduler/execute
+ * 目的: スケジューラーのタスクを手動で実行してテスト
+ * 
+ * @param {Object} req - リクエストオブジェクト
+ * @param {Object} res - レスポンスオブジェクト
+ */
+const executeSchedulerManually = async (req, res) => {
+  try {
+    console.log('手動スケジューラー実行が要求されました');
+    
+    const result = await DailyTaskScheduler.executeManually();
+    
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: 'スケジューラーが手動で実行されました'
+    });
+  } catch (error) {
+    console.error('手動スケジューラー実行エラー:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to execute scheduler manually',
+      message: error.message
+    });
+  }
+};
+
 // 他のファイルから使用できるようにエクスポート
 module.exports = {
   getAllTasks,
@@ -673,5 +746,8 @@ module.exports = {
   deleteRecurringTask,
   // ポイント関連の新しいメソッド
   getUserPoints,
-  addPoints
+  addPoints,
+  // スケジューラー関連の新しいメソッド
+  getSchedulerStatus,
+  executeSchedulerManually
 };

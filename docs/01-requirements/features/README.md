@@ -16,6 +16,7 @@
 | POINT-002 | 通常タスクのポイント機能拡張 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | POINT-003 | 重複ポイント加算防止機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | POINT-004 | ポイント表示・反映不具合修正 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
+| TASK-005 | 日本時間デイリータスク自動更新機能 | 🚧 進行中 | 2025-07-03 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -92,6 +93,16 @@
   - フロントエンドでのリアルタイム更新機能修正
 - **ファイル**: `POINT-004_fix-point-display-issues.md`
 
+### TASK-005: 日本時間デイリータスク自動更新機能
+- **概要**: デイリータスクが日本時間00:00に自動更新されるように修正
+- **ステータス**: 🚧 進行中（2025-07-03開始）
+- **実装内容**:
+  - タイムゾーン設定の確認・修正
+  - デイリータスク生成ロジックの日本時間対応
+  - スケジューリング機能の実装・改善
+  - タイムゾーン変換処理の追加
+- **ファイル**: `TASK-005_daily-task-timezone-jst-update.md`
+
 ---
 
 ## 📂 ファイル構造
@@ -105,6 +116,7 @@ docs/01-requirements/features/
 ├── POINT-002_regular-tasks-point-enhancement.md # 通常タスクポイント機能
 ├── POINT-003_prevent-duplicate-point-allocation.md # 重複ポイント加算防止機能
 ├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
+├── TASK-005_daily-task-timezone-jst-update.md  # 日本時間デイリータスク自動更新機能
 ├── COMPOSE-001.md                               # Docker Compose改善
 ├── DOCKER-001.md                                # Docker環境構築
 ├── DOCKER-002.md                                # Docker環境改善
@@ -117,6 +129,7 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
+- 2025-07-03: TASK-005追加（日本時間デイリータスク自動更新機能）
 - 2025-07-03: POINT-004完了ステータス更新、実装内容詳細化
 - 2025-07-03: POINT-004追加、POINT-003完了ステータス更新
 - 2025-07-03: POINT-003追加、POINT-002完了ステータス更新

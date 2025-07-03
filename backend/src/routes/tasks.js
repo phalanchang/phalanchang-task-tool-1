@@ -21,6 +21,10 @@ router.post('/recurring', tasksController.createRecurringTask);        // 繰り
 router.put('/recurring/:id', tasksController.updateRecurringTask);     // 繰り返しタスク更新
 router.delete('/recurring/:id', tasksController.deleteRecurringTask);  // 繰り返しタスク削除
 
+// スケジューラー関連ルート
+router.get('/scheduler/status', tasksController.getSchedulerStatus);        // スケジューラー状態取得
+router.post('/scheduler/execute', tasksController.executeSchedulerManually); // スケジューラー手動実行
+
 // 既存のタスク関連ルート（一般的なルートを最後に定義）
 router.get('/', tasksController.getAllTasks);
 router.post('/', tasksController.createTask);

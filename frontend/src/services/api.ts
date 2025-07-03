@@ -15,6 +15,7 @@ export interface UpdateTaskData {
   description?: string;
   status?: 'pending' | 'completed';
   priority?: 'low' | 'medium' | 'high';
+  points?: number;
 }
 
 // API レスポンスの型定義

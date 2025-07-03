@@ -91,14 +91,15 @@ const getTaskById = async (req, res) => {
 const createTask = async (req, res) => {
   try {
     // リクエストボディからタスク情報を取得
-    const { title, description, status, priority } = req.body;
+    const { title, description, status, priority, points } = req.body;
     
     // Taskモデルを使用して新しいタスクを作成
     const newTask = await Task.create({
       title,
       description,
       status,
-      priority
+      priority,
+      points: points || 0
     });
     
     // 作成されたタスクを返す（ステータス201 = Created）
@@ -141,7 +142,7 @@ const updateTask = async (req, res) => {
   
   try {
     // リクエストボディから更新する値を取得
-    const { title, description, status, priority } = req.body;
+    const { title, description, status, priority, points } = req.body;
     
     // デバッグログ追加
     console.log('PUT /api/tasks/' + id + ' - Received data:', {
@@ -150,7 +151,8 @@ const updateTask = async (req, res) => {
       title,
       description,
       status,
-      priority
+      priority,
+      points
     });
     
     // 更新前のタスク状態を取得
@@ -168,7 +170,8 @@ const updateTask = async (req, res) => {
       title,
       description,
       status,
-      priority
+      priority,
+      points
     });
     
     // タスクが見つからない場合

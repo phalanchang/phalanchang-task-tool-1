@@ -114,13 +114,14 @@ class Task {
 
       // データベースに挿入
       const [result] = await connection.execute(
-        `INSERT INTO tasks (title, description, status, priority) 
-         VALUES (?, ?, ?, ?)`,
+        `INSERT INTO tasks (title, description, status, priority, points) 
+         VALUES (?, ?, ?, ?, ?)`,
         [
           sanitizedData.title,
           sanitizedData.description,
           sanitizedData.status,
-          sanitizedData.priority
+          sanitizedData.priority,
+          sanitizedData.points || 0
         ]
       );
 

@@ -11,6 +11,7 @@ interface TaskFormData {
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
+  points?: number;
 }
 
 interface TaskFormProps {
@@ -21,6 +22,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [points, setPoints] = useState<number>(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +36,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit }) => {
     onSubmit({
       title: title.trim(),
       description: description.trim(),
-      priority: priority
+      priority: priority,
+      points: points
     });
 
     // フォームリセット
     setTitle('');
     setDescription('');
     setPriority('medium');
+    setPoints(0);
   };
 
   return (
@@ -94,6 +98,29 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit }) => {
           <option value="medium">🟡 中</option>
           <option value="high">🔴 高</option>
         </select>
+      </div>
+
+      <div className="task-form__field">
+        <label className="task-form__label" htmlFor="points">
+          💎 ポイント
+        </label>
+        <input
+          className="task-form__input"
+          id="points"
+          type="number"
+          min="0"
+          max="1000"
+          value={points}
+          onChange={(e) => {
+            const value = e.target.value;
+            const numValue = value === '' ? 0 : parseInt(value);
+            setPoints(numValue);
+          }}
+          placeholder="0"
+        />
+        <div className="task-form__help-text">
+          タスク完了時に獲得できるポイント（0から1000まで）
+        </div>
       </div>
       
       <button className="task-form__button" type="submit">

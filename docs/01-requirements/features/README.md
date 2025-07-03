@@ -12,7 +12,8 @@
 | DOCKER-003 | Docker環境最適化 | ✅ 完了 | - | - |
 | REPEAT-001 | 繰り返しタスクの管理 | ✅ 完了 | - | - |
 | SIDEBAR-001 | サイドバー機能 | ✅ 完了 | - | - |
-| POINT-001 | タスク完了時ポイント加算機能 | 🚧 進行中 | 2025-07-03 | Claude Code Assistant |
+| POINT-001 | タスク完了時ポイント加算機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
+| POINT-002 | 通常タスクのポイント機能拡張 | 🚧 進行中 | 2025-07-03 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -52,12 +53,22 @@
 
 ### POINT-001: タスク完了時ポイント加算機能
 - **概要**: デイリータスク完了時にユーザーポイントを加算する機能
-- **ステータス**: 進行中（2025-07-03開始）
+- **ステータス**: ✅ 完了（2025-07-03実装）
 - **実装内容**: 
   - タスク完了時のポイント加算ロジック
   - ユーザーポイント管理システム
   - フロントエンドでのポイント表示更新
 - **ファイル**: `POINT-001_task-completion-point-system.md`
+
+### POINT-002: 通常タスクのポイント機能拡張
+- **概要**: 通常タスクでもポイント設定・編集・加算機能を利用可能にする
+- **ステータス**: 🚧 進行中（2025-07-03開始）
+- **実装内容**:
+  - TaskFormでのポイント入力フィールド追加
+  - バックエンドでのタスク作成・編集時のポイント保存処理
+  - 通常タスク完了時のポイント加算機能
+  - TaskCardでのポイント表示改善
+- **ファイル**: `POINT-002_regular-tasks-point-enhancement.md`
 
 ---
 
@@ -69,6 +80,7 @@ docs/01-requirements/features/
 ├── BADGE-001_daily-task-notification-badge.md  # バッジ表示機能
 ├── BADGE-002_notification-badge-restoration.md # バッジ復旧対応
 ├── POINT-001_task-completion-point-system.md   # ポイント加算機能
+├── POINT-002_regular-tasks-point-enhancement.md # 通常タスクポイント機能
 ├── COMPOSE-001.md                               # Docker Compose改善
 ├── DOCKER-001.md                                # Docker環境構築
 ├── DOCKER-002.md                                # Docker環境改善

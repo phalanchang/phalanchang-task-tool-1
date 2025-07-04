@@ -94,9 +94,10 @@ ALTER TABLE tasks
 ADD COLUMN IF NOT EXISTS points INT DEFAULT 0 COMMENT 'Points awarded for completing this task',
 ADD COLUMN IF NOT EXISTS display_order INT NULL COMMENT 'Display order for daily tasks' AFTER recurring_config;
 
--- Add points column to recurring_tasks table
+-- Add points and display_order columns to recurring_tasks table
 ALTER TABLE recurring_tasks 
-ADD COLUMN IF NOT EXISTS points INT DEFAULT 0 COMMENT 'Points awarded for completing this recurring task';
+ADD COLUMN IF NOT EXISTS points INT DEFAULT 0 COMMENT 'Points awarded for completing this recurring task',
+ADD COLUMN IF NOT EXISTS display_order INT NULL COMMENT 'Display order for recurring tasks';
 
 -- Create user_points table for tracking cumulative points
 CREATE TABLE IF NOT EXISTS user_points (
@@ -146,5 +147,6 @@ ON DUPLICATE KEY UPDATE
 ALTER TABLE tasks ADD INDEX IF NOT EXISTS idx_points (points);
 ALTER TABLE tasks ADD INDEX IF NOT EXISTS idx_display_order (display_order);
 ALTER TABLE recurring_tasks ADD INDEX IF NOT EXISTS idx_points (points);
+ALTER TABLE recurring_tasks ADD INDEX IF NOT EXISTS idx_display_order (display_order);
 
 SELECT 'Database tables created successfully!' AS message;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TaskList, { Task, CreateTaskData } from '../components/TaskList';
-import TaskForm from '../components/TaskForm';
+import TaskCreationModal from '../components/TaskCreationModal';
 import NotificationBadge from '../components/NotificationBadge';
 import { taskAPI, UpdateTaskData } from '../services/api';
 import { useDailyTaskCount } from '../hooks/useDailyTaskCount';
@@ -17,6 +17,7 @@ const Tasks: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [showCompletedTasks, setShowCompletedTasks] = useState<boolean>(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   
   // Daily タスクの未完了数を取得
   const { count: dailyTaskCount } = useDailyTaskCount();
@@ -72,6 +73,7 @@ const Tasks: React.FC = () => {
       setError(null);
       await taskAPI.createTask(taskData);
       await loadTasks();
+      setIsCreateModalOpen(false); // モーダルを閉じる
       // 通常タスク作成時はデイリータスク更新不要
     } catch (err) {
       console.error('タスク作成エラー:', err);
@@ -234,10 +236,18 @@ const Tasks: React.FC = () => {
             <div className="tab-content-header">
               <h3>📑 すべてのタスク</h3>
               <p>通常タスクと繰り返しタスクのすべてが表示されます</p>
+              
+              {/* タスク作成ボタン */}
+              <div className="create-task-button-container">
+                <button 
+                  className="btn btn-primary create-task-btn"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  disabled={loading}
+                >
+                  ✨ 新しいタスクを作成
+                </button>
+              </div>
             </div>
-            
-            {/* タスク作成フォーム */}
-            <TaskForm onSubmit={handleCreateTask} />
             
             {/* すべてのタスク一覧 */}
             <TaskList 
@@ -295,6 +305,14 @@ const Tasks: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* タスク作成モーダル */}
+      <TaskCreationModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateTask}
+        loading={loading}
+      />
     </div>
   );
 };

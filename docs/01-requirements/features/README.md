@@ -18,6 +18,7 @@
 | POINT-004 | ポイント表示・反映不具合修正 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | TASK-005 | 日本時間デイリータスク自動更新機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | TASK-006 | すべてのタスク作成時モーダル化機能 | ✅ 完了 | 2025-07-04 | Claude Code Assistant |
+| TASK-007 | データベースアクセス不具合修正 | 🔄 進行中 | 2025-07-05 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -116,6 +117,17 @@
   - レスポンシブデザインと統一されたUI/UX
 - **ファイル**: `TASK-006_task-creation-modal-interface.md`
 
+### TASK-007: データベースアクセス不具合修正
+- **概要**: 新しい環境でのデータベースアクセスエラーの修正
+- **ステータス**: 🔄 進行中（2025-07-05実装中）
+- **実装内容**:
+  - データベーススキーマの確認・修正
+  - ポイント取得APIの修正
+  - デイリータスク取得APIの修正
+  - データベースマイグレーションの実行
+  - APIエンドポイントの修正
+- **ファイル**: `TASK-007_database-access-fix.md`
+
 ---
 
 ## 📂 ファイル構造
@@ -131,6 +143,7 @@ docs/01-requirements/features/
 ├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
 ├── TASK-005_daily-task-timezone-jst-update.md  # 日本時間デイリータスク自動更新機能
 ├── TASK-006_task-creation-modal-interface.md   # すべてのタスク作成時モーダル化機能
+├── TASK-007_database-access-fix.md             # データベースアクセス不具合修正
 ├── COMPOSE-001.md                               # Docker Compose改善
 ├── DOCKER-001.md                                # Docker環境構築
 ├── DOCKER-002.md                                # Docker環境改善
@@ -143,6 +156,7 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
+- 2025-07-05: TASK-007追加（データベースアクセス不具合修正）
 - 2025-07-04: TASK-006完了ステータス更新（すべてのタスク作成時モーダル化機能実装完了）
 - 2025-07-04: TASK-006追加（すべてのタスク作成時モーダル化機能）、TASK-005完了ステータス更新
 - 2025-07-03: TASK-005追加（日本時間デイリータスク自動更新機能）

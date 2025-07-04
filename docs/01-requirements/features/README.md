@@ -17,7 +17,7 @@
 | POINT-003 | 重複ポイント加算防止機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | POINT-004 | ポイント表示・反映不具合修正 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | TASK-005 | 日本時間デイリータスク自動更新機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
-| TASK-006 | すべてのタスク作成時モーダル化機能 | 🚧 進行中 | 2025-07-04 | Claude Code Assistant |
+| TASK-006 | すべてのタスク作成時モーダル化機能 | ✅ 完了 | 2025-07-04 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -106,12 +106,14 @@
 
 ### TASK-006: すべてのタスク作成時モーダル化機能
 - **概要**: 「すべてのタスク」での新しいタスク作成時に、「繰り返しタスク」同様のモーダル形式を採用
-- **ステータス**: 🚧 進行中（2025-07-04開始）
+- **ステータス**: ✅ 完了（2025-07-04実装）
 - **実装内容**:
-  - 現在のインライン作成方式をモーダル形式に変更
-  - 繰り返しタスクのモーダルコンポーネントを参考に実装
-  - ユーザビリティの向上
-  - 一貫性のあるUI/UX提供
+  - インライン作成方式からモーダル形式への変更
+  - 共通Modalコンポーネントの作成
+  - TaskCreationModalコンポーネントの実装
+  - アクセシビリティ対応（ESC、外側クリック、ARIA）
+  - TypeScript型安全性とバリデーション機能
+  - レスポンシブデザインと統一されたUI/UX
 - **ファイル**: `TASK-006_task-creation-modal-interface.md`
 
 ---
@@ -128,6 +130,7 @@ docs/01-requirements/features/
 ├── POINT-003_prevent-duplicate-point-allocation.md # 重複ポイント加算防止機能
 ├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
 ├── TASK-005_daily-task-timezone-jst-update.md  # 日本時間デイリータスク自動更新機能
+├── TASK-006_task-creation-modal-interface.md   # すべてのタスク作成時モーダル化機能
 ├── COMPOSE-001.md                               # Docker Compose改善
 ├── DOCKER-001.md                                # Docker環境構築
 ├── DOCKER-002.md                                # Docker環境改善
@@ -140,6 +143,7 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
+- 2025-07-04: TASK-006完了ステータス更新（すべてのタスク作成時モーダル化機能実装完了）
 - 2025-07-04: TASK-006追加（すべてのタスク作成時モーダル化機能）、TASK-005完了ステータス更新
 - 2025-07-03: TASK-005追加（日本時間デイリータスク自動更新機能）
 - 2025-07-03: POINT-004完了ステータス更新、実装内容詳細化

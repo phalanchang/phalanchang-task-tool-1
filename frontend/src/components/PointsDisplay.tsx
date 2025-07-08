@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDailyTaskRefresh } from '../contexts/DailyTaskContext';
+import { useDateChangeDetection } from '../hooks/useDateChangeDetection';
 import './PointsDisplay.css';
 
 interface UserPoints {
@@ -22,7 +23,7 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
   // リアルタイム更新用
   const { refreshTrigger } = useDailyTaskRefresh();
 
-  const fetchPoints = async () => {
+  const fetchPoints = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,12 +36,14 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
       
       const data = await response.json();
       if (data.success) {
-        // アニメーション効果
-        if (points && data.data.total_points > points.total_points) {
-          setIsAnimating(true);
-          setTimeout(() => setIsAnimating(false), 1000);
-        }
-        setPoints(data.data);
+        // アニメーション効果（前の状態と比較）
+        setPoints(prevPoints => {
+          if (prevPoints && data.data.total_points > prevPoints.total_points) {
+            setIsAnimating(true);
+            setTimeout(() => setIsAnimating(false), 1000);
+          }
+          return data.data;
+        });
       } else {
         throw new Error(data.message || 'Failed to fetch points');
       }
@@ -50,11 +53,14 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // 依存配列を空にして無限ループを防止
+
+  // 日付変更検知
+  useDateChangeDetection(fetchPoints);
 
   useEffect(() => {
     fetchPoints();
-  }, [refreshTrigger]);
+  }, [fetchPoints, refreshTrigger]);
 
   if (loading) {
     return (

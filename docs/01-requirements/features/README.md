@@ -18,6 +18,7 @@
 | POINT-004 | ポイント表示・反映不具合修正 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | TASK-005 | 日本時間デイリータスク自動更新機能 | ✅ 完了 | 2025-07-03 | Claude Code Assistant |
 | TASK-006 | すべてのタスク作成時モーダル化機能 | ✅ 完了 | 2025-07-04 | Claude Code Assistant |
+| POINT-005 | 日付変更時ポイントリセット機能修正 | 🔄 実装中 | 2025-07-08 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -116,6 +117,16 @@
   - レスポンシブデザインと統一されたUI/UX
 - **ファイル**: `TASK-006_task-creation-modal-interface.md`
 
+### POINT-005: 日付変更時ポイントリセット機能修正
+- **概要**: 日付が変わっても「今日」のポイントが0にリセットされない問題を修正
+- **ステータス**: 🔄 実装中（2025-07-08開始）
+- **実装内容**:
+  - バックエンドでのdaily_pointsリセット機能実装
+  - フロントエンドでの日付変更検知機能実装
+  - point_historyテーブル整備とロジック修正
+  - 統合テストと動作検証
+- **ファイル**: `POINT-005_daily-points-reset-fix.md`
+
 ---
 
 ## 📂 ファイル構造
@@ -129,6 +140,7 @@ docs/01-requirements/features/
 ├── POINT-002_regular-tasks-point-enhancement.md # 通常タスクポイント機能
 ├── POINT-003_prevent-duplicate-point-allocation.md # 重複ポイント加算防止機能
 ├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
+├── POINT-005_daily-points-reset-fix.md         # 日付変更時ポイントリセット機能修正
 ├── TASK-005_daily-task-timezone-jst-update.md  # 日本時間デイリータスク自動更新機能
 ├── TASK-006_task-creation-modal-interface.md   # すべてのタスク作成時モーダル化機能
 ├── COMPOSE-001.md                               # Docker Compose改善
@@ -143,6 +155,7 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
+- 2025-07-08: POINT-005追加（日付変更時ポイントリセット機能修正）
 - 2025-07-04: TASK-006完了ステータス更新（すべてのタスク作成時モーダル化機能実装完了）
 - 2025-07-04: TASK-006追加（すべてのタスク作成時モーダル化機能）、TASK-005完了ステータス更新
 - 2025-07-03: TASK-005追加（日本時間デイリータスク自動更新機能）

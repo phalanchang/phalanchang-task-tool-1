@@ -38,7 +38,10 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({ className }) => {
       if (data.success) {
         // アニメーション効果（前の状態と比較）
         setPoints(prevPoints => {
-          if (prevPoints && data.data.total_points > prevPoints.total_points) {
+          if (prevPoints && (
+            data.data.total_points > prevPoints.total_points ||
+            data.data.daily_points > prevPoints.daily_points
+          )) {
             setIsAnimating(true);
             setTimeout(() => setIsAnimating(false), 1000);
           }

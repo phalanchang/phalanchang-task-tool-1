@@ -22,6 +22,7 @@
 | TASK-008 | 繰り返しタスクAPI取得エラー修正 | ⚠️ 部分完了 | 2025-07-05 | Claude Code Assistant |
 | TASK-009 | プロジェクト管理システム改善 | 🔄 進行中 | 2025-07-05 | Claude Code Assistant |
 | POINT-005 | 日付変更時ポイントリセット機能修正 | ✅ 完了 | 2025-07-08 | Claude Code Assistant |
+| POINT-006 | 今日のポイント計算方式をtasksテーブル直接参照に変更 | ✅ 完了 | 2025-07-08 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -162,6 +163,17 @@
   - 統合テストと動作検証
 - **ファイル**: `POINT-005_daily-points-reset-fix.md`
 
+### POINT-006: 今日のポイント計算方式をtasksテーブル直接参照に変更
+- **概要**: 現在のuser_points.daily_pointsからtasksテーブル直接参照による今日のポイント計算に変更
+- **ステータス**: 🔄 実装中（2025-07-08開始）
+- **変更理由**: データの一貫性向上とリアルタイム性の確保
+- **実装内容**:
+  - tasksテーブルから完了タスクの直接集計による今日のポイント計算
+  - 計算条件: ステータス完了 + 完了日時が本日 + ユーザーID一致
+  - user_points.daily_pointsへの依存を削除
+  - APIレスポンスロジックの変更
+- **ファイル**: `POINT-006_direct-task-points-calculation.md`
+
 ---
 
 ## 📂 ファイル構造
@@ -176,6 +188,7 @@ docs/01-requirements/features/
 ├── POINT-003_prevent-duplicate-point-allocation.md # 重複ポイント加算防止機能
 ├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
 ├── POINT-005_daily-points-reset-fix.md         # 日付変更時ポイントリセット機能修正
+├── POINT-006_direct-task-points-calculation.md # 今日のポイント計算方式変更
 ├── TASK-005_daily-task-timezone-jst-update.md  # 日本時間デイリータスク自動更新機能
 ├── TASK-006_task-creation-modal-interface.md   # すべてのタスク作成時モーダル化機能
 ├── TASK-007_database-access-fix.md             # データベースアクセス不具合修正
@@ -193,6 +206,7 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
+- 2025-07-08: POINT-006追加（今日のポイント計算方式をtasksテーブル直接参照に変更）
 - 2025-07-08: POINT-005追加（日付変更時ポイントリセット機能修正）
 - 2025-07-05: TASK-009追加（プロジェクト管理システム改善）、TASK-008ステータス修正
 - 2025-07-05: TASK-008追加（繰り返しタスクAPI取得エラー修正）

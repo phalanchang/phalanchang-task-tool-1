@@ -6,6 +6,7 @@
  */
 
 const { createConnection } = require('../../database/config');
+const { getJSTDate } = require('../utils/timezone');
 
 class Task {
   /**
@@ -787,11 +788,58 @@ class UserPoints {
   }
 
   /**
-   * point_historyテーブルベースの正確な日次ポイント計算
+   * tasksテーブル直接参照による今日のポイント計算
    * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
    * @returns {Promise<number>} 今日のポイント合計
    */
-  static async getTodayPoints(userId = 'default_user') {
+  static async getTodayPointsFromTasks(userId = 'default_user') {
+    const today = getJSTDate().replace(/-/g, '');
+    let connection;
+    
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+      
+      console.log(`getTodayPointsFromTasks - userId: ${userId}, today: ${today}`);
+      
+      // tasksテーブルから今日完了したタスクのポイントを直接計算
+      const [todayPoints] = await connection.execute(`
+        SELECT COALESCE(SUM(
+          CASE 
+            WHEN t.source_task_id IS NOT NULL THEN 
+              (SELECT rt.points FROM recurring_tasks rt WHERE rt.id = t.source_task_id)
+            ELSE t.points 
+          END
+        ), 0) as daily_total
+        FROM tasks t
+        WHERE t.status = 'completed'
+          AND DATE(t.updated_at) = ?
+          AND (t.points > 0 OR t.source_task_id IS NOT NULL)
+      `, [today]);
+      
+      console.log('getTodayPointsFromTasks クエリ結果:', todayPoints);
+      
+      return parseInt(todayPoints[0].daily_total) || 0;
+      
+    } catch (error) {
+      console.error('tasksテーブルから今日のポイントを計算できませんでした:', error);
+      
+      // フォールバック: point_historyテーブルを使用
+      return await this.getTodayPointsFromHistory(userId);
+      
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * point_historyテーブルベースの日次ポイント計算（フォールバック用）
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<number>} 今日のポイント合計
+   */
+  static async getTodayPointsFromHistory(userId = 'default_user') {
     const today = new Date().toISOString().split('T')[0];
     let connection;
     
@@ -799,7 +847,7 @@ class UserPoints {
       connection = await createConnection();
       await connection.query('USE task_management_app');
       
-      console.log(`getTodayPoints デバッグ - userId: ${userId}, today: ${today}`);
+      console.log(`getTodayPointsFromHistory フォールバック - userId: ${userId}, today: ${today}`);
       
       // point_historyテーブルから今日のポイントを計算
       const [todayPoints] = await connection.execute(
@@ -807,15 +855,15 @@ class UserPoints {
         [userId, today]
       );
       
-      console.log('getTodayPoints クエリ結果:', todayPoints);
+      console.log('getTodayPointsFromHistory クエリ結果:', todayPoints);
       
       return parseInt(todayPoints[0].daily_total) || 0;
       
     } catch (error) {
-      console.error('point_historyテーブルから今日のポイントを取得できませんでした:', error);
+      console.error('point_historyテーブルからも今日のポイントを取得できませんでした:', error);
       
       try {
-        // 代替ロジック：user_pointsのdaily_pointsを使用
+        // 最終代替ロジック：user_pointsのdaily_pointsを使用
         const [userPoints] = await connection.execute(
           'SELECT daily_points FROM user_points WHERE user_id = ?',
           [userId]
@@ -823,7 +871,7 @@ class UserPoints {
         
         return userPoints[0]?.daily_points || 0;
       } catch (fallbackError) {
-        console.error('代替ロジックでのポイント取得もエラー:', fallbackError);
+        console.error('最終代替ロジックでのポイント取得もエラー:', fallbackError);
         return 0;
       }
     } finally {
@@ -831,6 +879,17 @@ class UserPoints {
         await connection.end();
       }
     }
+  }
+
+  /**
+   * point_historyテーブルベースの正確な日次ポイント計算（旧メソッド、後方互換性用）
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<number>} 今日のポイント合計
+   * @deprecated 新しいgetTodayPointsFromTasksを使用してください
+   */
+  static async getTodayPoints(userId = 'default_user') {
+    console.log('⚠️ 非推奨メソッドgetTodayPoints()が呼び出されました。getTodayPointsFromTasks()への移行を推奨します。');
+    return await this.getTodayPointsFromHistory(userId);
   }
 
   /**

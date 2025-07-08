@@ -624,9 +624,9 @@ const getUserPoints = async (req, res) => {
     const points = await UserPoints.getUserPoints(userId);
     console.log('*** getUserPoints結果:', points, '***');
     
-    // point_historyから今日の正確なポイントを取得
-    const todayPoints = await UserPoints.getTodayPoints(userId);
-    console.log('*** getTodayPoints結果:', todayPoints, '***');
+    // 🆕 tasksテーブル直接参照による今日のポイント計算
+    const todayPoints = await UserPoints.getTodayPointsFromTasks(userId);
+    console.log('*** getTodayPointsFromTasks結果:', todayPoints, '***');
     
     const responseData = {
       success: true,

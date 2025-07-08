@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS point_history (
   points_earned INT NOT NULL COMMENT 'Points earned in this transaction',
   task_title VARCHAR(255) NULL COMMENT 'Title of the task that earned points',
   action_type VARCHAR(50) NOT NULL DEFAULT 'task_completion' COMMENT 'Type of action that earned points',
+  earned_date DATE NOT NULL DEFAULT (CURRENT_DATE) COMMENT 'Date points were earned',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the points were earned',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update timestamp',
   
   -- Indexes for performance
   INDEX idx_user_id (user_id),
@@ -17,11 +19,19 @@ CREATE TABLE IF NOT EXISTS point_history (
   INDEX idx_created_at (created_at),
   INDEX idx_action_type (action_type),
   INDEX idx_daily_points (user_id, DATE(created_at)),
+  INDEX idx_user_date (user_id, earned_date),
+  INDEX idx_earned_date (earned_date),
+  INDEX idx_user_task (user_id, task_id),
   
   -- Foreign key constraint
-  CONSTRAINT fk_point_history_task FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-  CONSTRAINT fk_point_history_user FOREIGN KEY (user_id) REFERENCES user_points(user_id) ON DELETE CASCADE
+  CONSTRAINT fk_point_history_task FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Point history tracking table';
+
+-- Add constraint to prevent duplicate point allocation for the same task completion
+-- Using ALTER TABLE to handle cases where table already exists
+ALTER TABLE point_history 
+ADD CONSTRAINT IF NOT EXISTS uk_task_completion UNIQUE (task_id, action_type) 
+COMMENT 'Prevent duplicate point allocation for same task completion';
 
 SELECT 'Point history table migration completed successfully!' AS message;

@@ -21,6 +21,7 @@
 | TASK-007 | データベースアクセス不具合修正 | ✅ 完了 | 2025-07-05 | Claude Code Assistant |
 | TASK-008 | 繰り返しタスクAPI取得エラー修正 | ⚠️ 部分完了 | 2025-07-05 | Claude Code Assistant |
 | TASK-009 | プロジェクト管理システム改善 | 🔄 進行中 | 2025-07-05 | Claude Code Assistant |
+| POINT-005 | 日付変更時ポイントリセット機能修正 | ✅ 完了 | 2025-07-08 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -151,6 +152,16 @@
   - プロジェクト管理プロセスの標準化
 - **ファイル**: `TASK-009_project-management-improvements.md`
 
+### POINT-005: 日付変更時ポイントリセット機能修正
+- **概要**: 日付が変わっても「今日」のポイントが0にリセットされない問題を修正
+- **ステータス**: ✅ 完了（2025-07-08実装完了）
+- **実装内容**:
+  - バックエンドでのdaily_pointsリセット機能実装
+  - フロントエンドでの日付変更検知機能実装
+  - point_historyテーブル整備とロジック修正
+  - 統合テストと動作検証
+- **ファイル**: `POINT-005_daily-points-reset-fix.md`
+
 ---
 
 ## 📂 ファイル構造
@@ -164,6 +175,7 @@ docs/01-requirements/features/
 ├── POINT-002_regular-tasks-point-enhancement.md # 通常タスクポイント機能
 ├── POINT-003_prevent-duplicate-point-allocation.md # 重複ポイント加算防止機能
 ├── POINT-004_fix-point-display-issues.md        # ポイント表示・反映不具合修正
+├── POINT-005_daily-points-reset-fix.md         # 日付変更時ポイントリセット機能修正
 ├── TASK-005_daily-task-timezone-jst-update.md  # 日本時間デイリータスク自動更新機能
 ├── TASK-006_task-creation-modal-interface.md   # すべてのタスク作成時モーダル化機能
 ├── TASK-007_database-access-fix.md             # データベースアクセス不具合修正
@@ -181,6 +193,7 @@ docs/01-requirements/features/
 
 ## 🔄 更新履歴
 
+- 2025-07-08: POINT-005追加（日付変更時ポイントリセット機能修正）
 - 2025-07-05: TASK-009追加（プロジェクト管理システム改善）、TASK-008ステータス修正
 - 2025-07-05: TASK-008追加（繰り返しタスクAPI取得エラー修正）
 - 2025-07-05: TASK-007追加（データベースアクセス不具合修正）

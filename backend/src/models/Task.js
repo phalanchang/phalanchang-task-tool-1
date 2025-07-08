@@ -681,7 +681,7 @@ class Task {
  */
 class UserPoints {
   /**
-   * ユーザーの現在のポイント情報を取得
+   * ユーザーの現在のポイント情報を取得（日付変更時自動リセット対応）
    * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
    * @returns {Promise<Object>} ポイント情報
    */
@@ -691,6 +691,9 @@ class UserPoints {
       connection = await createConnection();
       await connection.query('USE task_management_app');
 
+      // 現在の日付（YYYY-MM-DD形式）
+      const today = new Date().toISOString().split('T')[0];
+
       const [rows] = await connection.execute(
         'SELECT * FROM user_points WHERE user_id = ?',
         [userId]
@@ -699,17 +702,79 @@ class UserPoints {
       if (rows.length === 0) {
         // ユーザーが存在しない場合は新規作成
         await connection.execute(
-          'INSERT INTO user_points (user_id, total_points, daily_points, last_updated) VALUES (?, 0, 0, CURRENT_DATE)',
-          [userId]
+          'INSERT INTO user_points (user_id, total_points, daily_points, last_updated) VALUES (?, 0, 0, ?)',
+          [userId, today]
         );
-        return { user_id: userId, total_points: 0, daily_points: 0, last_updated: new Date() };
+        return { user_id: userId, total_points: 0, daily_points: 0, last_updated: today };
       }
 
-      return rows[0];
+      const existingPoints = rows[0];
+      const lastUpdated = existingPoints.last_updated;
+      const lastUpdatedDate = new Date(lastUpdated).toISOString().split('T')[0];
+
+      // 日付が変わっている場合はdaily_pointsをリセット
+      if (lastUpdatedDate !== today) {
+        
+        await connection.execute(
+          'UPDATE user_points SET daily_points = 0, last_updated = ? WHERE user_id = ?',
+          [today, userId]
+        );
+        
+        return {
+          ...existingPoints,
+          daily_points: 0,
+          last_updated: today
+        };
+      }
+
+      return existingPoints;
 
     } catch (error) {
       console.error('ユーザーポイント取得エラー:', error);
       throw new Error(`ポイント情報の取得に失敗しました: ${error.message}`);
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
+  }
+
+  /**
+   * point_historyテーブルベースの正確な日次ポイント計算
+   * @param {string} userId - ユーザーID（デフォルト: 'default_user'）
+   * @returns {Promise<number>} 今日のポイント合計
+   */
+  static async getTodayPoints(userId = 'default_user') {
+    const today = new Date().toISOString().split('T')[0];
+    let connection;
+    
+    try {
+      connection = await createConnection();
+      await connection.query('USE task_management_app');
+      
+      // point_historyテーブルから今日のポイントを計算
+      const [todayPoints] = await connection.execute(
+        'SELECT COALESCE(SUM(points_earned), 0) as daily_total FROM point_history WHERE user_id = ? AND DATE(created_at) = ?',
+        [userId, today]
+      );
+      
+      return parseInt(todayPoints[0].daily_total) || 0;
+      
+    } catch (error) {
+      console.error('point_historyテーブルから今日のポイントを取得できませんでした:', error);
+      
+      try {
+        // 代替ロジック：user_pointsのdaily_pointsを使用
+        const [userPoints] = await connection.execute(
+          'SELECT daily_points FROM user_points WHERE user_id = ?',
+          [userId]
+        );
+        
+        return userPoints[0]?.daily_points || 0;
+      } catch (fallbackError) {
+        console.error('代替ロジックでのポイント取得もエラー:', fallbackError);
+        return 0;
+      }
     } finally {
       if (connection) {
         await connection.end();

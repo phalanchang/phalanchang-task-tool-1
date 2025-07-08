@@ -113,11 +113,22 @@ class RecurringTask {
       connection = await createConnection();
       await connection.query('USE task_management_app');
 
-      const [rows] = await connection.execute(
-        `SELECT * FROM recurring_tasks 
-         WHERE is_active = TRUE 
-         ORDER BY COALESCE(display_order, 999) ASC, created_at ASC`
+      // Check if display_order column exists
+      const [columns] = await connection.execute(
+        `SHOW COLUMNS FROM recurring_tasks LIKE 'display_order'`
       );
+      
+      const hasDisplayOrder = columns.length > 0;
+      
+      const query = hasDisplayOrder 
+        ? `SELECT * FROM recurring_tasks 
+           WHERE is_active = TRUE 
+           ORDER BY COALESCE(display_order, 999) ASC, created_at ASC`
+        : `SELECT * FROM recurring_tasks 
+           WHERE is_active = TRUE 
+           ORDER BY created_at ASC`;
+           
+      const [rows] = await connection.execute(query);
 
       // recurring_config を JSON パース
       return rows.map(row => ({

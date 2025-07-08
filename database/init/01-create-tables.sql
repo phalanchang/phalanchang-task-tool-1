@@ -89,4 +89,64 @@ SELECT
 FROM tasks 
 WHERE is_recurring = TRUE;
 
+-- Add points column to tasks table
+ALTER TABLE tasks 
+ADD COLUMN IF NOT EXISTS points INT DEFAULT 0 COMMENT 'Points awarded for completing this task',
+ADD COLUMN IF NOT EXISTS display_order INT NULL COMMENT 'Display order for daily tasks' AFTER recurring_config;
+
+-- Add points and display_order columns to recurring_tasks table
+ALTER TABLE recurring_tasks 
+ADD COLUMN IF NOT EXISTS points INT DEFAULT 0 COMMENT 'Points awarded for completing this recurring task',
+ADD COLUMN IF NOT EXISTS display_order INT NULL COMMENT 'Display order for recurring tasks';
+
+-- Create user_points table for tracking cumulative points
+CREATE TABLE IF NOT EXISTS user_points (
+  id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'User points record ID',
+  user_id VARCHAR(50) NOT NULL DEFAULT 'default_user' COMMENT 'User identifier (future expansion)',
+  total_points INT NOT NULL DEFAULT 0 COMMENT 'Total accumulated points',
+  daily_points INT NOT NULL DEFAULT 0 COMMENT 'Points earned today',
+  last_updated DATE NOT NULL DEFAULT (CURRENT_DATE) COMMENT 'Last update date',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation timestamp',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update timestamp',
+  
+  -- Indexes for performance
+  INDEX idx_user_id (user_id),
+  INDEX idx_last_updated (last_updated),
+  
+  -- Unique constraint to ensure one record per user
+  UNIQUE KEY uk_user_points (user_id)
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='User points tracking table';
+
+-- Create point_history table for tracking point transactions
+CREATE TABLE IF NOT EXISTS point_history (
+  id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Point history record ID',
+  user_id VARCHAR(50) NOT NULL DEFAULT 'default_user' COMMENT 'User identifier',
+  task_id INT NULL COMMENT 'Task ID that earned the points',
+  points_earned INT NOT NULL COMMENT 'Points earned in this transaction',
+  task_title VARCHAR(255) NULL COMMENT 'Title of the task that earned points',
+  action_type VARCHAR(50) NOT NULL DEFAULT 'task_completion' COMMENT 'Type of action that earned points',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the points were earned',
+  
+  -- Indexes for performance
+  INDEX idx_user_id (user_id),
+  INDEX idx_task_id (task_id),
+  INDEX idx_created_at (created_at),
+  INDEX idx_action_type (action_type),
+  INDEX idx_daily_points (user_id, DATE(created_at))
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Point history tracking table';
+
+-- Insert default user record
+INSERT INTO user_points (user_id, total_points, daily_points, last_updated) 
+VALUES ('default_user', 0, 0, CURRENT_DATE)
+ON DUPLICATE KEY UPDATE
+  last_updated = CURRENT_DATE;
+
+-- Add indexes to tasks table for points-related queries
+ALTER TABLE tasks ADD INDEX IF NOT EXISTS idx_points (points);
+ALTER TABLE tasks ADD INDEX IF NOT EXISTS idx_display_order (display_order);
+ALTER TABLE recurring_tasks ADD INDEX IF NOT EXISTS idx_points (points);
+ALTER TABLE recurring_tasks ADD INDEX IF NOT EXISTS idx_display_order (display_order);
+
 SELECT 'Database tables created successfully!' AS message;

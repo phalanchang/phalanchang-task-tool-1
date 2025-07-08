@@ -619,12 +619,26 @@ const deleteRecurringTask = async (req, res) => {
 const getUserPoints = async (req, res) => {
   try {
     const userId = req.query.userId || 'default_user';
-    const points = await UserPoints.getUserPoints(userId);
+    console.log('*** getUserPoints APIコール開始 - userId:', userId, '***');
     
-    res.status(200).json({
+    const points = await UserPoints.getUserPoints(userId);
+    console.log('*** getUserPoints結果:', points, '***');
+    
+    // point_historyから今日の正確なポイントを取得
+    const todayPoints = await UserPoints.getTodayPoints(userId);
+    console.log('*** getTodayPoints結果:', todayPoints, '***');
+    
+    const responseData = {
       success: true,
-      data: points
-    });
+      data: {
+        ...points,
+        daily_points: todayPoints
+      }
+    };
+    
+    console.log('*** getUserPoints APIレスポンス:', JSON.stringify(responseData, null, 2), '***');
+    
+    res.status(200).json(responseData);
   } catch (error) {
     console.error('ポイント取得エラー:', error);
     res.status(500).json({

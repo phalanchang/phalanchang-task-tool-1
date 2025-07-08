@@ -714,17 +714,64 @@ class UserPoints {
 
       // 日付が変わっている場合はdaily_pointsをリセット
       if (lastUpdatedDate !== today) {
-        
         await connection.execute(
           'UPDATE user_points SET daily_points = 0, last_updated = ? WHERE user_id = ?',
           [today, userId]
         );
         
-        return {
-          ...existingPoints,
-          daily_points: 0,
-          last_updated: today
-        };
+        // point_historyから正確な今日のポイントを取得
+        try {
+          const [todayPointsResult] = await connection.execute(
+            'SELECT COALESCE(SUM(points_earned), 0) as daily_total FROM point_history WHERE user_id = ? AND DATE(created_at) = ?',
+            [userId, today]
+          );
+          
+          const todayPoints = parseInt(todayPointsResult[0].daily_total) || 0;
+          
+          // daily_pointsを正確な値で更新
+          await connection.execute(
+            'UPDATE user_points SET daily_points = ? WHERE user_id = ?',
+            [todayPoints, userId]
+          );
+          
+          return {
+            ...existingPoints,
+            daily_points: todayPoints,
+            last_updated: today
+          };
+        } catch (historyError) {
+          console.error('point_history取得エラー（代替処理で0ポイント）:', historyError);
+          return {
+            ...existingPoints,
+            daily_points: 0,
+            last_updated: today
+          };
+        }
+      }
+
+      // 日付が変わっていない場合も、point_historyから正確な値を取得
+      try {
+        const [todayPointsResult] = await connection.execute(
+          'SELECT COALESCE(SUM(points_earned), 0) as daily_total FROM point_history WHERE user_id = ? AND DATE(created_at) = ?',
+          [userId, today]
+        );
+        
+        const todayPoints = parseInt(todayPointsResult[0].daily_total) || 0;
+        
+        // daily_pointsが不正確な場合は更新
+        if (existingPoints.daily_points !== todayPoints) {
+          await connection.execute(
+            'UPDATE user_points SET daily_points = ? WHERE user_id = ?',
+            [todayPoints, userId]
+          );
+          
+          return {
+            ...existingPoints,
+            daily_points: todayPoints
+          };
+        }
+      } catch (historyError) {
+        console.error('point_history取得エラー（代替処理継続）:', historyError);
       }
 
       return existingPoints;
@@ -752,11 +799,15 @@ class UserPoints {
       connection = await createConnection();
       await connection.query('USE task_management_app');
       
+      console.log(`getTodayPoints デバッグ - userId: ${userId}, today: ${today}`);
+      
       // point_historyテーブルから今日のポイントを計算
       const [todayPoints] = await connection.execute(
         'SELECT COALESCE(SUM(points_earned), 0) as daily_total FROM point_history WHERE user_id = ? AND DATE(created_at) = ?',
         [userId, today]
       );
+      
+      console.log('getTodayPoints クエリ結果:', todayPoints);
       
       return parseInt(todayPoints[0].daily_total) || 0;
       
@@ -814,11 +865,9 @@ class UserPoints {
       const currentDailyTotal = parseInt(dailyTotalRows[0].daily_total) || 0;
       const newDailyTotal = currentDailyTotal + points;
 
+      console.log(`addPoints デバッグ - currentDailyTotal: ${currentDailyTotal}, points: ${points}, newDailyTotal: ${newDailyTotal}`);
 
-      // ユーザーポイント情報を取得または作成（total_pointsのため）
-      const currentPoints = await this.getUserPoints(userId);
-
-      // ポイントを更新
+      // ポイントを更新（daily_pointsは再計算で正確に）
       await connection.execute(
         `UPDATE user_points 
          SET total_points = total_points + ?, 
@@ -828,9 +877,16 @@ class UserPoints {
          WHERE user_id = ?`,
         [points, newDailyTotal, today, userId]
       );
+      
+      console.log(`addPoints UPDATE実行完了 - daily_points: ${newDailyTotal}`);
 
-      // 更新後の情報を取得
-      return await this.getUserPoints(userId);
+      // 更新後の情報を直接取得（getUserPointsは日付変更検知のため避ける）
+      const [updatedRows] = await connection.execute(
+        'SELECT * FROM user_points WHERE user_id = ?',
+        [userId]
+      );
+      
+      return updatedRows[0];
 
     } catch (error) {
       console.error('ポイント加算エラー:', error);

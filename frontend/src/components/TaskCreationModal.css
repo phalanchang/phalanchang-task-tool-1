@@ -1,0 +1,196 @@
+/* タスク作成フォーム */
+.task-creation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* フォームグループ */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ラベル */
+.form-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+/* 入力フィールド */
+.form-input,
+.form-textarea,
+.form-select {
+  padding: 12px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+.form-input.error,
+.form-textarea.error,
+.form-select.error {
+  border-color: #e74c3c;
+}
+
+.form-input.error:focus,
+.form-textarea.error:focus,
+.form-select.error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.form-input:disabled,
+.form-textarea:disabled,
+.form-select:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* テキストエリア */
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  max-height: 200px;
+}
+
+/* セレクトボックス */
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23666' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  appearance: none;
+}
+
+/* ヘルプテキスト */
+.help-text {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* エラーメッセージ */
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.error-message::before {
+  content: '⚠️';
+  font-size: 0.8rem;
+}
+
+/* アクションボタン */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-primary {
+  background-color: #4285f4;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #e1e8ed;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 480px) {
+  .task-creation-form {
+    gap: 16px;
+  }
+  
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .btn {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-select {
+    padding: 10px 14px;
+    font-size: 16px; /* iOS zoom prevention */
+  }
+}
+
+/* フォーカス可視性の改善 */
+.btn:focus {
+  outline: 2px solid #4285f4;
+  outline-offset: 2px;
+}
+
+.btn-secondary:focus {
+  outline-color: #666;
+}

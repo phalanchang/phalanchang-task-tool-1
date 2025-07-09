@@ -1,0 +1,269 @@
+/* CSS Custom Properties for Material Design */
+:root {
+  --sidebar-width-desktop: 250px;
+  --sidebar-width-mobile: 80vw;
+  --sidebar-bg-color: #f5f5f5;
+  --sidebar-active-color: #2196f3;
+  --sidebar-hover-color: #e3f2fd;
+  --sidebar-text-color: #212121;
+  --sidebar-text-secondary: #757575;
+  --sidebar-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  --sidebar-border: #e0e0e0;
+  --transition-speed: 0.3s;
+  --border-radius: 4px;
+}
+
+/* Sidebar Container */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-width-desktop);
+  background-color: var(--sidebar-bg-color);
+  border-right: 1px solid var(--sidebar-border);
+  box-shadow: var(--sidebar-shadow);
+  transition: transform var(--transition-speed) ease;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Desktop: Always visible */
+@media (min-width: 769px) {
+  .sidebar {
+    transform: translateX(0);
+    position: fixed;
+    top: 56px; /* ヘッダーの高さ分下げる */
+    height: calc(100vh - 56px);
+    width: var(--sidebar-width-desktop);
+  }
+}
+
+/* Mobile: Hidden by default, slide in when open */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    top: 48px; /* モバイルでのヘッダー高さ分下げる */
+    height: calc(100vh - 48px);
+    width: var(--sidebar-width-mobile);
+    max-width: 320px;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    top: 40px;
+    height: calc(100vh - 40px);
+    width: 90vw;
+    max-width: 280px;
+  }
+}
+
+/* Close Button (Mobile only) */
+.close-button {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: var(--sidebar-text-secondary);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: var(--sidebar-hover-color);
+}
+
+@media (max-width: 768px) {
+  .close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Navigation Items Container */
+.nav-items {
+  padding: 60px 0 16px; /* Top padding for mobile close button */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (min-width: 769px) {
+  .nav-items {
+    padding: 16px 0;
+  }
+}
+
+/* Navigation Item Styles */
+.nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 0 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius);
+  color: var(--sidebar-text-color);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background-color: var(--sidebar-hover-color);
+}
+
+.nav-item:focus {
+  outline: 2px solid var(--sidebar-active-color);
+  outline-offset: 2px;
+}
+
+/* Active Navigation Item */
+.nav-item.active {
+  background-color: var(--sidebar-active-color);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: white;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Navigation Icon */
+.nav-icon {
+  font-size: 24px;
+  margin-right: 16px;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  position: relative;
+}
+
+/* Material Icons (優先表示) */
+.nav-icon .material-icons {
+  font-family: 'Material Icons', 'Material Icons Outlined', 'Material Symbols Outlined';
+  font-size: 24px;
+  display: block;
+}
+
+/* フォールバック絵文字 (Material Iconsが読み込めない場合) */
+.nav-icon .icon-fallback {
+  display: none;
+  font-size: 20px;
+}
+
+/* Material Iconsが利用できない場合のフォールバック */
+@supports not (font-family: 'Material Icons') {
+  .nav-icon .material-icons {
+    display: none;
+  }
+  
+  .nav-icon .icon-fallback {
+    display: block;
+  }
+}
+
+/* CDN読み込み失敗時のフォールバック */
+.nav-icon .material-icons:empty + .icon-fallback {
+  display: block;
+}
+
+/* Navigation Label */
+.nav-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: inherit;
+  color: inherit;
+}
+
+/* Ripple Effect (Material Design) */
+.nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+  pointer-events: none;
+}
+
+.nav-item:active::after {
+  width: 200px;
+  height: 200px;
+}
+
+/* Accessibility */
+.nav-item:focus-visible {
+  outline: 2px solid var(--sidebar-active-color);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .sidebar {
+    border-right: 2px solid var(--sidebar-text-color);
+  }
+  
+  .nav-item {
+    border: 1px solid transparent;
+  }
+  
+  .nav-item:focus {
+    border-color: var(--sidebar-active-color);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .nav-item,
+  .close-button {
+    transition: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar {
+    display: none;
+  }
+}

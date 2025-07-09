@@ -1,0 +1,209 @@
+/**
+ * TaskCard スタイル（TDD Green Phase）
+ * 
+ * テストを通すための最小限のCSS
+ */
+
+/* CSS Custom Properties（変数） */
+:root {
+  /* 優先度カラー */
+  --priority-high: #f44336;
+  --priority-medium: #ff9800;
+  --priority-low: #4caf50;
+  
+  /* ステータスカラー */
+  --status-pending: #2196f3;
+  --status-completed: #4caf50;
+  
+  /* 基本カラー */
+  --card-background: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.1);
+  --card-shadow-hover: rgba(0, 0, 0, 0.15);
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-radius: 8px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+}
+
+/* カード基本スタイル */
+.task-card {
+  background: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px var(--card-shadow);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 8px var(--card-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* 優先度別の左ボーダー */
+.task-card--high {
+  border-left-color: var(--priority-high);
+}
+
+.task-card--medium {
+  border-left-color: var(--priority-medium);
+}
+
+.task-card--low {
+  border-left-color: var(--priority-low);
+}
+
+/* ステータス別のスタイル */
+.task-card--completed {
+  opacity: 0.9;
+  background: #d0d0d0; /* より濃いグレーに変更 */
+}
+
+.task-card--pending {
+  background: var(--card-background);
+}
+
+/* ヘッダー行スタイル */
+.task-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+/* タイトルスタイル */
+.task-card__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  flex: 1;
+}
+
+/* バッジコンテナ */
+.task-card__badges {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* コンテンツ行スタイル */
+.task-card__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+/* 説明エリア */
+.task-card__description-area {
+  flex: 1;
+}
+
+/* 説明文スタイル */
+.task-card__description {
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.status-badge,
+.priority-badge,
+.points-badge {
+  display: inline-block;
+  padding: 2px var(--spacing-xs);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase;
+}
+
+.status-badge--pending {
+  background-color: var(--status-pending);
+}
+
+.status-badge--completed {
+  background-color: var(--status-completed);
+}
+
+.priority-badge--high {
+  background-color: var(--priority-high);
+}
+
+.priority-badge--medium {
+  background-color: var(--priority-medium);
+}
+
+.priority-badge--low {
+  background-color: var(--priority-low);
+}
+
+/* ポイントバッジ */
+.points-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-transform: none;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* アクションボタン */
+.task-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--spacing-xs);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.btn--toggle {
+  background-color: var(--status-pending);
+  color: white;
+}
+
+.btn--toggle:hover {
+  background-color: #1976d2;
+  transform: translateY(-1px);
+}
+
+.btn--delete {
+  background-color: var(--priority-high);
+  color: white;
+}
+
+.btn--delete:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+}
+
+/* メタ情報 */
+.task-card__meta {
+  margin-top: var(--spacing-xs);
+}
+
+.task-card__created-at {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}

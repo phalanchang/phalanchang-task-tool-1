@@ -3,10 +3,6 @@ import React from 'react';
 const Dashboard: React.FC = () => {
   return (
     <div className="page-container">
-      <header className="page-header">
-        <h2>📊 ダッシュボード</h2>
-        <p>タスク管理の概要を表示します</p>
-      </header>
       
       <div className="dashboard-content">
         <div className="dashboard-cards">

@@ -26,12 +26,14 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     endpoints: {
       tasks: '/api/tasks',
+      memos: '/api/memos',
       health: '/health'
     }
   });
 });
 
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/memos', require('./routes/memos'));
 app.use('/api/points', require('./routes/points'));
 
 app.use((req, res) => {

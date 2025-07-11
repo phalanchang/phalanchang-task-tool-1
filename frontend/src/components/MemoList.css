@@ -1,0 +1,35 @@
+.memo-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.memo-list-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: #666666;
+}
+
+.memo-list-empty .material-icons {
+  font-size: 64px;
+  color: #cccccc;
+  margin-bottom: 16px;
+}
+
+.memo-list-empty p {
+  margin: 8px 0;
+  color: #666666;
+}
+
+.memo-list-empty-hint {
+  font-size: 14px;
+  color: #999999;
+}
+
+@media (max-width: 768px) {
+  .memo-list {
+    grid-template-columns: 1fr;
+    padding: 8px 0;
+  }
+}

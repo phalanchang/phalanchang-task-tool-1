@@ -26,6 +26,8 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     endpoints: {
       tasks: '/api/tasks',
+      memos: '/api/memos',
+      points: '/api/points',
       health: '/health'
     }
   });
@@ -33,6 +35,7 @@ app.get('/api', (req, res) => {
 
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/points', require('./routes/points'));
+app.use('/api/memos', require('./routes/memos'));
 
 app.use((req, res) => {
   res.status(404).json({

@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import PointsDisplay from './components/PointsDisplay';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
+import MemoPage from './pages/MemoPage';
 import RecurringTasks from './pages/RecurringTasks';
 import Settings from './pages/Settings';
 import { useDailyTaskCount } from './hooks/useDailyTaskCount';
@@ -89,6 +90,7 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/tasks" element={<Tasks />} />
+            <Route path="/memos" element={<MemoPage />} />
             <Route path="/recurring-tasks" element={<RecurringTasks />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>

@@ -6,6 +6,14 @@
   width: 100%;
 }
 
+/* タブレット用の調整 */
+@media (min-width: 768px) {
+  .page-container {
+    max-width: 1200px;
+    padding: 28px 32px;
+  }
+}
+
 /* デスクトップ用の追加調整 */
 @media (min-width: 1024px) {
   .page-container {
@@ -18,6 +26,13 @@
   .page-container {
     max-width: 1800px; /* 超大型ディスプレイでの最大幅 */
     padding: 40px 64px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .page-container {
+    max-width: 2000px; /* 4K画面での最大幅 */
+    padding: 48px 80px;
   }
 }
 
@@ -217,6 +232,36 @@
 .recurring-tasks-list {
   display: grid;
   gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+/* PC画面での繰り返しタスク最適化 */
+@media (min-width: 768px) {
+  .recurring-tasks-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .recurring-tasks-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .recurring-tasks-list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .recurring-tasks-list {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 32px;
+  }
 }
 
 .recurring-task-card {
@@ -625,6 +670,28 @@
   gap: 16px;
 }
 
+/* PC画面でのダッシュボード最適化 */
+@media (min-width: 1024px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 28px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 32px;
+  }
+}
+
 .stat-card {
   background: white;
   padding: 24px;
@@ -702,6 +769,22 @@
 .settings-content {
   display: grid;
   gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+/* PC画面での設定ページ最適化 */
+@media (min-width: 1024px) {
+  .settings-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .settings-content {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
 }
 
 .settings-section {

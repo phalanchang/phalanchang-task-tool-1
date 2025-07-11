@@ -3,10 +3,6 @@ import React from 'react';
 const Settings: React.FC = () => {
   return (
     <div className="page-container">
-      <header className="page-header">
-        <h2>⚙️ 設定</h2>
-        <p>アプリケーションの設定を管理します</p>
-      </header>
       
       <div className="settings-content">
         <section className="settings-section">

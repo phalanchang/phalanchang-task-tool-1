@@ -54,47 +54,51 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="App">
-      {/* サイドバー */}
-      <Sidebar 
-        isOpen={sidebarOpen}
-        onClose={handleCloseSidebar}
-        currentPath={location.pathname}
-        onNavigate={handleNavigation}
-      />
-      
-      {/* モバイル用オーバーレイ */}
-      {sidebarOpen && <div className="sidebar-overlay" onClick={handleCloseSidebar} />}
-      
-      {/* メインコンテンツエリア */}
-      <div className="main-content">
-        <header className="App-header">
-          {/* モバイル用ハンバーガーメニュー */}
-          <button 
-            className="hamburger-menu"
-            onClick={handleMenuClick}
-            aria-label="メニューを開く"
-          >
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-          </button>
-          
-          <h1>タスク管理アプリ</h1>
-          
-          {/* ポイント表示 */}
-          <PointsDisplay />
-        </header>
+      {/* 全体ヘッダー */}
+      <header className="App-header">
+        {/* モバイル用ハンバーガーメニュー */}
+        <button 
+          className="hamburger-menu"
+          onClick={handleMenuClick}
+          aria-label="メニューを開く"
+        >
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+        </button>
         
-        <main>
-          {/* ルーティング */}
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/memos" element={<MemoPage />} />
-            <Route path="/recurring-tasks" element={<RecurringTasks />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </main>
+        <h1>タスク管理アプリ</h1>
+        
+        {/* ポイント表示 */}
+        <PointsDisplay />
+      </header>
+      
+      {/* コンテンツラッパー */}
+      <div className="content-wrapper">
+        {/* サイドバー */}
+        <Sidebar 
+          isOpen={sidebarOpen}
+          onClose={handleCloseSidebar}
+          currentPath={location.pathname}
+          onNavigate={handleNavigation}
+        />
+        
+        {/* モバイル用オーバーレイ */}
+        {sidebarOpen && <div className="sidebar-overlay" onClick={handleCloseSidebar} />}
+        
+        {/* メインコンテンツエリア */}
+        <div className="main-content">
+          <main>
+            {/* ルーティング */}
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/tasks" element={<Tasks />} />
+              <Route path="/memos" element={<MemoPage />} />
+              <Route path="/recurring-tasks" element={<RecurringTasks />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </main>
+        </div>
       </div>
     </div>
   );

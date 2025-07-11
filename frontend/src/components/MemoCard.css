@@ -1,0 +1,163 @@
+.memo-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 200px;
+}
+
+.memo-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.memo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.memo-card-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  color: #333333;
+  word-break: break-word;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.memo-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.memo-card-content {
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.memo-preview {
+  color: #666666;
+  font-size: 14px;
+  line-height: 1.6;
+  max-height: 150px;
+  overflow: hidden;
+  position: relative;
+}
+
+.memo-preview::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(to bottom, transparent, #ffffff);
+}
+
+.memo-preview h1,
+.memo-preview h2,
+.memo-preview h3,
+.memo-preview h4,
+.memo-preview h5,
+.memo-preview h6 {
+  font-size: 16px;
+  margin: 8px 0;
+}
+
+.memo-preview p {
+  margin: 8px 0;
+}
+
+.memo-preview ul,
+.memo-preview ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.memo-preview code {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.memo-preview pre {
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.memo-preview blockquote {
+  border-left: 3px solid #e0e0e0;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #666666;
+}
+
+.memo-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #999999;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+  margin-top: auto;
+}
+
+.memo-date {
+  font-size: 12px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  color: #666666;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover {
+  background-color: #f5f5f5;
+  color: #333333;
+}
+
+.icon-button.delete:hover {
+  background-color: #ffebee;
+  color: #f44336;
+}
+
+.icon-button .material-icons {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .memo-card {
+    padding: 12px;
+  }
+  
+  .memo-card-title {
+    font-size: 16px;
+  }
+  
+  .memo-preview {
+    font-size: 13px;
+  }
+}

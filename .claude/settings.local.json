@@ -36,7 +36,15 @@
       "Bash(docker exec:*)",
       "Bash(docker-compose:*)",
       "Bash(docker restart:*)",
-      "Bash(docker cp:*)"
+      "Bash(docker cp:*)",
+      "Bash(npx tsc:*)",
+      "Bash(gh:*)",
+      "Bash(git fetch:*)",
+      "Bash(time curl:*)",
+      "Bash(echo)",
+      "Bash(timeout 10s npm start)",
+      "Bash(npm run migrate:*)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }

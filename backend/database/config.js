@@ -45,6 +45,7 @@ const createConnection = async () => {
       port: dbConfig.port,
       user: dbConfig.user,
       password: dbConfig.password,
+      database: dbConfig.database,
       charset: dbConfig.charset,
       timezone: dbConfig.timezone,
       insecureAuth: dbConfig.insecureAuth,

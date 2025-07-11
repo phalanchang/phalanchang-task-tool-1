@@ -17,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPath, onNavig
   const navigationItems = [
     { path: '/', label: 'ダッシュボード', icon: 'home' },
     { path: '/tasks', label: 'タスク管理', icon: 'assignment' },
+    { path: '/memos', label: 'メモ', icon: 'note_add' },
     { path: '/recurring-tasks', label: '繰り返しタスク', icon: 'loop' },
     { path: '/settings', label: '設定', icon: 'settings' }
   ];

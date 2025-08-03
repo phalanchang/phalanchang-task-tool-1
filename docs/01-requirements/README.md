@@ -52,6 +52,7 @@ docs/01-requirements/
 | POINT-005 | 日付変更時ポイントリセット機能修正 | ✅ 完了 | 2025-07-08 | Claude Code Assistant |
 | POINT-006 | 今日のポイント計算方式をtasksテーブル直接参照に変更 | ✅ 完了 | 2025-07-08 | Claude Code Assistant |
 | MEMO-001 | メモ管理システム機能 | ✅ 完了 | 2025-07-11 | PM (Claude Code Assistant) |
+| MONITOR-001 | デイリータスクモニタリングダッシュボード機能 | 🔄 進行中 | 2025-08-03 | Claude Code Assistant |
 
 ## 📝 機能詳細
 
@@ -72,6 +73,9 @@ docs/01-requirements/
 ### 📝 メモ機能
 - **[MEMO-001](./features/MEMO-001_memo-management-system.md)**: メモ管理システム機能
 
+### 📊 モニタリング機能
+- **[MONITOR-001](./features/MONITOR-001_daily-task-monitoring-dashboard.md)**: デイリータスクモニタリングダッシュボード機能
+
 ### 🔄 タスク管理
 - **[TASK-005](./features/TASK-005_daily-task-timezone-jst-update.md)**: 日本時間デイリータスク自動更新機能
 - **[TASK-006](./features/TASK-006_task-creation-modal-interface.md)**: すべてのタスク作成時モーダル化機能
@@ -91,6 +95,7 @@ docs/01-requirements/
 
 ## 🔄 更新履歴
 
+- 2025-08-03: MONITOR-001追加（デイリータスクモニタリングダッシュボード機能）
 - 2025-07-26: ドキュメント構造改善（README.mdを上位階層に移動）、MEMO-001完了ステータス更新
 - 2025-07-11: MEMO-001追加（メモ管理システム機能）、POINT-006完了ステータス更新
 - 2025-07-08: POINT-006追加（今日のポイント計算方式をtasksテーブル直接参照に変更）

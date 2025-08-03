@@ -28,6 +28,7 @@ app.get('/api', (req, res) => {
       tasks: '/api/tasks',
       memos: '/api/memos',
       points: '/api/points',
+      dailyTaskStats: '/api/daily-task-stats',
       health: '/health'
     }
   });
@@ -36,6 +37,7 @@ app.get('/api', (req, res) => {
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/points', require('./routes/points'));
 app.use('/api/memos', require('./routes/memos'));
+app.use('/api/daily-task-stats', require('./routes/dailyTaskStats'));
 
 app.use((req, res) => {
   res.status(404).json({

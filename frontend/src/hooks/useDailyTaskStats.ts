@@ -27,6 +27,8 @@ export interface DailyTaskStats {
   taskBreakdown: Array<{
     taskId: number;
     title: string;
+    totalAttempts: number;
+    completedAttempts: number;
     successRate: number;
     streak: number;
     lastSevenDays: boolean[];

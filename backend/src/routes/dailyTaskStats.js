@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
     const today = getJSTDate();
     const now = new Date();
     
+    
     // 日本時間での現在の日時を取得
     const jstNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
     
@@ -50,19 +51,23 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completedTasks,
         SUM(CASE WHEN status = 'completed' THEN points ELSE 0 END) as earnedPoints
       FROM tasks
-      WHERE is_recurring = TRUE
+      WHERE source_task_id IS NOT NULL
         AND DATE(created_at) = ?
     `;
     
     const [todayStats] = await pool.execute(todayStatsQuery, [today]);
+    const totalTasks = parseInt(todayStats[0].totalTasks) || 0;
+    const completedTasks = parseInt(todayStats[0].completedTasks) || 0;
+    const earnedPoints = parseInt(todayStats[0].earnedPoints) || 0;
+    
     const todayData = {
-      totalTasks: todayStats[0].totalTasks || 0,
-      completedTasks: todayStats[0].completedTasks || 0,
-      incompleteTasks: (todayStats[0].totalTasks || 0) - (todayStats[0].completedTasks || 0),
-      completionRate: todayStats[0].totalTasks > 0 
-        ? Math.round((todayStats[0].completedTasks / todayStats[0].totalTasks) * 100)
+      totalTasks: totalTasks,
+      completedTasks: completedTasks,
+      incompleteTasks: totalTasks - completedTasks,
+      completionRate: totalTasks > 0 
+        ? Math.round((completedTasks / totalTasks) * 100)
         : 0,
-      earnedPoints: todayStats[0].earnedPoints || 0
+      earnedPoints: earnedPoints
     };
     
     // 2. 今週の統計情報を取得
@@ -73,7 +78,7 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
         SUM(CASE WHEN status = 'completed' THEN points ELSE 0 END) as points
       FROM tasks
-      WHERE is_recurring = TRUE
+      WHERE source_task_id IS NOT NULL
         AND created_at >= ? AND created_at <= ?
       GROUP BY DATE(created_at)
       ORDER BY date
@@ -95,17 +100,22 @@ router.get('/', async (req, res) => {
       currentDate.setDate(weekStart.getDate() + i);
       const dateStr = formatDateForMySQL(currentDate).split(' ')[0];
       
-      const dayData = weekStats.find(stat => stat.date === dateStr);
+      const dayData = weekStats.find(stat => {
+        const statDateStr = stat.date instanceof Date 
+          ? stat.date.toISOString().split('T')[0]
+          : stat.date;
+        return statDateStr === dateStr;
+      });
       dailyBreakdown.push({
         date: dateStr,
-        completed: dayData ? dayData.completed : 0,
-        total: dayData ? dayData.total : 0
+        completed: dayData ? parseInt(dayData.completed) || 0 : 0,
+        total: dayData ? parseInt(dayData.total) || 0 : 0
       });
       
       if (dayData) {
-        totalWeekTasks += dayData.total;
-        completedWeekTasks += dayData.completed;
-        weekPoints += dayData.points || 0;
+        totalWeekTasks += parseInt(dayData.total) || 0;
+        completedWeekTasks += parseInt(dayData.completed) || 0;
+        weekPoints += parseInt(dayData.points) || 0;
       }
     }
     
@@ -126,7 +136,7 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completedTasks,
         SUM(CASE WHEN status = 'completed' THEN points ELSE 0 END) as earnedPoints
       FROM tasks
-      WHERE is_recurring = TRUE
+      WHERE source_task_id IS NOT NULL
         AND created_at >= ? AND created_at <= ?
     `;
     
@@ -135,11 +145,15 @@ router.get('/', async (req, res) => {
       formatDateForMySQL(lastWeekEnd)
     ]);
     
+    const lastWeekTotalTasks = parseInt(lastWeekStats[0].totalTasks) || 0;
+    const lastWeekCompletedTasks = parseInt(lastWeekStats[0].completedTasks) || 0;
+    const lastWeekEarnedPoints = parseInt(lastWeekStats[0].earnedPoints) || 0;
+    
     const lastWeekData = {
-      completionRate: lastWeekStats[0].totalTasks > 0 
-        ? Math.round((lastWeekStats[0].completedTasks / lastWeekStats[0].totalTasks) * 100)
+      completionRate: lastWeekTotalTasks > 0 
+        ? Math.round((lastWeekCompletedTasks / lastWeekTotalTasks) * 100)
         : 0,
-      earnedPoints: lastWeekStats[0].earnedPoints || 0
+      earnedPoints: lastWeekEarnedPoints
     };
     
     // 4. タスク別の統計情報を取得
@@ -159,9 +173,8 @@ router.get('/', async (req, res) => {
           SEPARATOR ','
         ) as recentHistory
       FROM tasks t
-      JOIN tasks rt ON t.source_task_id = rt.id
-      WHERE t.is_recurring = TRUE
-        AND t.source_task_id IS NOT NULL
+      JOIN recurring_tasks rt ON t.source_task_id = rt.id
+      WHERE t.source_task_id IS NOT NULL
         AND t.created_at >= DATE_SUB(?, INTERVAL 30 DAY)
       GROUP BY t.source_task_id, rt.title
       ORDER BY completedAttempts / totalAttempts DESC
@@ -209,6 +222,8 @@ router.get('/', async (req, res) => {
       return {
         taskId: task.taskId,
         title: task.title,
+        totalAttempts: parseInt(task.totalAttempts) || 0,
+        completedAttempts: parseInt(task.completedAttempts) || 0,
         successRate,
         streak,
         lastSevenDays

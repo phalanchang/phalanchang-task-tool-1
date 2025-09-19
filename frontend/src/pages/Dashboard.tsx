@@ -135,7 +135,9 @@ const Dashboard: React.FC = () => {
               <div key={task.taskId} className="task-item">
                 <div className="task-header">
                   <h4>{task.title}</h4>
-                  <span className="success-rate">{task.successRate}%</span>
+                  <span className="success-rate">
+                    ({task.completedAttempts}/{task.totalAttempts}) {task.successRate}%
+                  </span>
                 </div>
                 <div className="task-details">
                   <div className="streak">
